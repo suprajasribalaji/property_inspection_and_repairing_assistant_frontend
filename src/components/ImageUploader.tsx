@@ -31,7 +31,7 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
       onClick={() => !file && inputRef.current?.click()}
-      className={`relative mx-auto w-full max-w-lg rounded-2xl border-2 border-dashed transition-all ${
+      className={`relative mx-auto w-full max-w-md rounded-2xl border-2 border-dashed transition-all ${
         file
           ? "border-primary/30 bg-card"
           : "cursor-pointer border-muted-foreground/20 bg-card hover:border-primary/50 hover:bg-secondary/50"
@@ -48,7 +48,7 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
             className="p-4"
           >
             <div className="relative overflow-hidden rounded-xl">
-              <img src={preview} alt="Preview" className="w-full rounded-xl object-cover" style={{ maxHeight: 320 }} />
+              <img src={preview} alt="Preview" className="w-full rounded-xl object-cover" style={{ maxHeight: 256 }} />
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -76,7 +76,7 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-4 px-8 py-16"
+            className="flex flex-col items-center gap-4 px-6 py-10"
           >
             <div className="rounded-2xl bg-primary/10 p-4">
               <Upload className="h-8 w-8 text-primary" />
@@ -87,7 +87,7 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <ImageIcon className="h-3.5 w-3.5" />
-              <span>JPG, PNG, WebP supported</span>
+              <span>JPG, PNG, JPEG, WebP supported</span>
             </div>
           </motion.div>
         )}

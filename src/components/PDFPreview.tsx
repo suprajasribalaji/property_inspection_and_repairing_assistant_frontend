@@ -1,8 +1,22 @@
 import { useInspection } from "@/context/InspectionContext";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 const PDFPreview = () => {
   const { results, uploadedImage } = useInspection();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleDownload = () => {
     const text = results.map((r, i) => `${i + 1}. ${r.question}\nAnswer: ${r.answer}`).join("\n\n");
@@ -16,43 +30,107 @@ const PDFPreview = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadPDF = () => {
+    const printContent = document.getElementById('pdf-content');
+    if (!printContent) return;
+
+    const originalContent = document.body.innerHTML;
+    const printWindow = window.open('', '', 'width=800,height=600');
+    
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Inspection Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h1 { color: #9169C1; }
+              h2 { color: #42326E; margin-top: 20px; }
+              .question { font-weight: bold; margin-top: 15px; }
+              .answer { margin-top: 5px; line-height: 1.4; }
+              img { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; }
+              @media print { body { margin: 15mm; } }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    }
+  };
+
   return (
-    <div className="mx-auto max-w-4xl pt-20 px-6 pb-12">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <FileText className="h-6 w-6 text-primary" />
-          <h2 className="font-display text-2xl font-bold text-foreground">Inspection Report</h2>
+    <div className="h-full p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
+          <h2 className="font-display text-lg font-bold text-foreground">Inspection Report</h2>
         </div>
-        <button
-          onClick={handleDownload}
-          className="flex items-center gap-2 rounded-xl gradient-bg px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-        >
-          <Download className="h-4 w-4" />
-          Download Report
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-2 rounded-lg gradient-bg px-3 py-1.5 text-xs font-medium text-primary-foreground transition hover:opacity-90"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download
+            <ChevronDown className="h-3 w-3.5" />
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 top-full mt-1 w-32 rounded-lg border border-border bg-card shadow-lg z-10">
+              <button
+                onClick={() => {
+                  handleDownloadPDF();
+                  setShowDropdown(false);
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-secondary transition-colors rounded-t-lg"
+              >
+                <FileText className="h-3 w-3" />
+                as PDF
+              </button>
+              <button
+                onClick={() => {
+                  handleDownload();
+                  setShowDropdown(false);
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-secondary transition-colors rounded-b-lg"
+              >
+                <FileText className="h-3 w-3" />
+                as TXT
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {uploadedImage && (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          <img src={uploadedImage} alt="Inspected property" className="w-full object-cover" style={{ maxHeight: 300 }} />
-        </div>
-      )}
+      <div id="pdf-content" className="space-y-4">
+        
+        {uploadedImage && (
+          <div className="text-center">
+            <img src={uploadedImage} alt="Inspected property" className="inline-block rounded-xl" />
+          </div>
+        )}
 
-      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-        <div className="gradient-bg px-6 py-4">
-          <h3 className="font-display text-lg font-semibold text-primary-foreground">Inspection Questions & Answers</h3>
-        </div>
-        <div className="divide-y divide-border">
-          {results.map((item, i) => (
-            <div key={i} className="px-6 py-4">
-              <p className="text-sm font-medium text-foreground">
-                {i + 1}. {item.question}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Answer:</span> {item.answer}
-              </p>
-            </div>
-          ))}
+        <div>
+          <div className="space-y-3 mt-4">
+            {results.map((item, i) => (
+              <div key={i}>
+                <p className="font-bold question">
+                  {i + 1}. {item.question}
+                </p>
+                <p className="answer">
+                  <span className="font-semibold">Answer:</span> {item.answer}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

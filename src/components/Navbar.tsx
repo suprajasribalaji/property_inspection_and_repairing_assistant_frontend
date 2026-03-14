@@ -1,6 +1,6 @@
 import { useInspection } from "@/context/InspectionContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Camera, MessageSquare, FileText, Home } from "lucide-react";
+import { Camera, MessageSquare, FileText, Bot } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Navbar = () => {
@@ -11,15 +11,14 @@ const Navbar = () => {
   const navItems = [
     { label: "Image Analysis", icon: Camera, path: "/", always: true },
     { label: "Chat", icon: MessageSquare, path: "/chat", always: false },
-    { label: "PDF Preview", icon: FileText, path: "/report", always: false },
   ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border bg-card/80 backdrop-blur-xl">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-2">
-          <Home className="h-5 w-5 text-primary" />
-          <span className="font-display text-lg font-bold text-foreground">InspectAI</span>
+          <Bot className="h-5 w-5 text-primary" />
+          <span className="font-display text-lg font-bold text-[#42326E]">Prop-sector</span>
         </div>
         <div className="flex items-center gap-1">
           {navItems.map((item) => {

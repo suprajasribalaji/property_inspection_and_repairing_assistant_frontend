@@ -38,7 +38,10 @@ const ChatPanel = () => {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-4 py-3">
-        <h3 className="font-display text-sm font-semibold text-foreground">Chat Assistant</h3>
+        <div className="flex items-center gap-2">
+          <Bot className="h-4 w-4 text-primary" />
+          <h3 className="font-display text-sm font-semibold text-foreground">Chat Assistant</h3>
+        </div>
         <p className="text-xs text-muted-foreground">Ask follow-up questions about the inspection</p>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
