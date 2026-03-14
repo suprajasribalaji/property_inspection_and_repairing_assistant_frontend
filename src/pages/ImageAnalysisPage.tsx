@@ -47,15 +47,11 @@ const ImageAnalysisPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-2xl text-center"
         >
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary">
-            <Scan className="h-3.5 w-3.5" />
-            AI-Powered Inspection
-          </div>
-          <h1 className="mb-3 font-display text-4xl font-bold text-foreground md:text-5xl">
-            AI House Inspection{" "}
-            <span className="gradient-text">Assistant</span>
+          <h1 className="mb-3 font-display text-4xl font-bold text-[#9169C1] md:text-4xl">
+            House Inspection{" "}
+            <span className="text-[#9169C1]">Assistant</span>
           </h1>
-          <p className="mx-auto mb-10 max-w-md text-muted-foreground">
+          <p className="mx-auto mb-8 max-w-md text-xm text-[#42326E]">
             Upload a photo of your property and let AI analyze it across 100 inspection criteria instantly.
           </p>
           <ImageUploader file={uploadedFile} preview={uploadedImage} onFileSelect={handleFileSelect} onRemove={handleRemove} />
@@ -64,9 +60,9 @@ const ImageAnalysisPage = () => {
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
             disabled={!uploadedFile || loading}
-            className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-8 py-3 text-base font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Scan className="h-5 w-5" />
+            <Scan className="h-4 w-4" />
             Analyze Image
           </motion.button>
         </motion.div>
