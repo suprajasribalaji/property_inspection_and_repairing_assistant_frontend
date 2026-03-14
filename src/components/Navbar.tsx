@@ -1,0 +1,62 @@
+import { useInspection } from "@/context/InspectionContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Camera, MessageSquare, FileText, Home } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+const Navbar = () => {
+  const { isAnalyzed } = useInspection();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const navItems = [
+    { label: "Image Analysis", icon: Camera, path: "/", always: true },
+    { label: "Chat", icon: MessageSquare, path: "/chat", always: false },
+    { label: "PDF Preview", icon: FileText, path: "/report", always: false },
+  ];
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border bg-card/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
+        <div className="flex items-center gap-2">
+          <Home className="h-5 w-5 text-primary" />
+          <span className="font-display text-lg font-bold text-foreground">InspectAI</span>
+        </div>
+        <div className="flex items-center gap-1">
+          {navItems.map((item) => {
+            const disabled = !item.always && !isAnalyzed;
+            const active = location.pathname === item.path;
+            const btn = (
+              <button
+                key={item.label}
+                disabled={disabled}
+                onClick={() => !disabled && navigate(item.path)}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                  active
+                    ? "gradient-bg text-primary-foreground shadow-card"
+                    : disabled
+                    ? "cursor-not-allowed text-muted-foreground opacity-50"
+                    : "text-foreground hover:bg-secondary"
+                }`}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            );
+
+            if (disabled) {
+              return (
+                <Tooltip key={item.label}>
+                  <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                  <TooltipContent>Complete image analysis first.</TooltipContent>
+                </Tooltip>
+              );
+            }
+            return btn;
+          })}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
