@@ -14,8 +14,7 @@ export interface InspectResponse {
 }
 
 export interface BackendResponse {
-  questions: string[];
-  answers: Array<{
+  question_answers: Array<{
     question: string;
     answer: string;
   }>;
@@ -31,34 +30,19 @@ export const inspectImage = async (image: File): Promise<InspectResponse> => {
     const formData = new FormData();
     formData.append("file", image);  // Backend expects "file"
     
-    const response = await api.post<BackendResponse>("/inspect", formData);
+    const response = await api.post<BackendResponse>("/api/inspect", formData);
     
     console.log('Raw API Response:', response.data);
+    console.log('Number of question_answers:', response.data.question_answers?.length || 0);
     
-    // Handle different response formats
-    let answersData;
-    if (typeof response.data.answers === 'string') {
-      // Parse JSON string if it's a string
-      try {
-        const parsed = JSON.parse(response.data.answers.replace(/```json\n|\n```/g, ''));
-        const answersArray = Object.values(parsed);
-        
-        // Use questions from backend if available, otherwise generate generic ones
-        answersData = answersArray.map((answer: string, index: number) => ({
-          question: response.data.questions?.[index] || `Question ${index + 1}`,
-          answer: answer
-        }));
-      } catch (parseError) {
-        console.error('Failed to parse JSON:', parseError);
-        answersData = [];
-      }
-    } else if (Array.isArray(response.data.answers)) {
-      // Handle array format
-      answersData = response.data.answers.map((item: {question?: string, answer: string}, index: number) => ({
-        question: item.question || response.data.questions?.[index] || `Question ${index + 1}`,
-        answer: item.answer
-      }));
+    // Handle clean question_answers format from backend
+    let answersData: InspectionItem[] = [];
+    
+    if (response.data.question_answers && Array.isArray(response.data.question_answers)) {
+      console.log('Found question_answers array');
+      answersData = response.data.question_answers;
     } else {
+      console.error('Unexpected response format:', response.data);
       answersData = [];
     }
     
