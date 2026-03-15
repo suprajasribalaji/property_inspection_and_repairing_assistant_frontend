@@ -7,6 +7,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import { AnimatePresence, motion } from "framer-motion";
 import { Scan } from "lucide-react";
 import { toast } from "sonner";
+import { log } from "console";
 
 const ImageAnalysisPage = () => {
   const { uploadedFile, uploadedImage, setUploadedFile, setUploadedImage, setResults, setIsAnalyzed } = useInspection();
@@ -27,11 +28,25 @@ const ImageAnalysisPage = () => {
     if (!uploadedFile) return;
     setLoading(true);
     try {
+      console.log('Starting analysis...');
       const data = await inspectImage(uploadedFile);
+      console.log('Data:', data);
+      
+      // Check if results are valid before proceeding
+      if (!data.results || data.results.length === 0) {
+        console.log('No results from analysis, not navigating to chat');
+        toast.error("No inspection results found. Please try with a different image.");
+        return;
+      }
+      
+      console.log('Analysis successful, setting results:', data.results);
       setResults(data.results);
+      console.log('Setting isAnalyzed to true');
       setIsAnalyzed(true);
+      console.log('Navigating to chat page...');
       navigate("/chat");
-    } catch {
+    } catch (error) {
+      console.error('Analysis failed:', error);
       toast.error("Analysis failed. Please try again.");
     } finally {
       setLoading(false);
