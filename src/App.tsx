@@ -4,11 +4,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InspectionProvider } from "@/context/InspectionContext";
-import Navbar from "@/components/Navbar";
+import Layout from "@/components/Layout";
 import ImageAnalysisPage from "@/pages/ImageAnalysisPage";
 import ChatPage from "@/pages/ChatPage";
 import ReportPage from "@/pages/ReportPage";
-import NotFound from "@/pages/NotFound";
+import ErrorPage from "@/pages/ErrorPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import ServerErrorPage from "./pages/ServerErrorPage";
 
 const queryClient = new QueryClient();
 
@@ -19,12 +21,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <InspectionProvider>
-          <Navbar />
           <Routes>
-            <Route path="/" element={<ImageAnalysisPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/report" element={<ReportPage />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<ImageAnalysisPage />} />
+              <Route path="chat" element={<ChatPage />} />
+              <Route path="report" element={<ReportPage />} />
+            </Route>
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="/server-error" element={<ServerErrorPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </InspectionProvider>
       </BrowserRouter>

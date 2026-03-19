@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useInspection } from "@/context/InspectionContext";
 import { inspectImage } from "@/services/api";
 import ImageUploader from "@/components/ImageUploader";
@@ -13,6 +13,14 @@ const ImageAnalysisPage = () => {
   const { uploadedFile, uploadedImage, setUploadedFile, setUploadedImage, setResults, setIsAnalyzed } = useInspection();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we should preserve the image when coming back from error page
+  useEffect(() => {
+    if (location.state?.preserveImage && uploadedFile) {
+      console.log('Preserving uploaded image after error');
+    }
+  }, [location.state, uploadedFile]);
 
   const handleFileSelect = (file: File) => {
     setUploadedFile(file);
@@ -34,8 +42,13 @@ const ImageAnalysisPage = () => {
       
       // Check if results are valid before proceeding
       if (!data.results || data.results.length === 0) {
-        console.log('No results from analysis, not navigating to chat');
-        toast.error("No inspection results found. Please try with a different image.");
+        console.log('No results from analysis, navigating to error page');
+        navigate("/error", { 
+          state: { 
+            error: "No inspection results found. The analysis returned empty results.",
+            preserveImage: true
+          } 
+        });
         return;
       }
       
@@ -47,7 +60,13 @@ const ImageAnalysisPage = () => {
       navigate("/chat");
     } catch (error) {
       console.error('Analysis failed:', error);
-      toast.error("Analysis failed. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Analysis failed. Please try again.";
+      navigate("/error", { 
+        state: { 
+          error: errorMessage,
+          preserveImage: true
+        } 
+      });
     } finally {
       setLoading(false);
     }
