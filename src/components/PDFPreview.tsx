@@ -7,6 +7,15 @@ const PDFPreview = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Filter out questions with "Not visible in image" answer
+  const filteredResults = results.filter(item => 
+    item.answer.trim().toLowerCase() !== "not visible in the image" && 
+    item.answer.trim().toLowerCase() !== "no answer available"
+  );
+
+  const answeredCount = filteredResults.length;
+  const totalCount = results.length;
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -19,7 +28,7 @@ const PDFPreview = () => {
   }, []);
 
   const handleDownload = () => {
-    const text = results.map((r, i) => `${i + 1}. ${r.question}\nAnswer: ${r.answer}`).join("\n\n");
+    const text = filteredResults.map((r, i) => `${i + 1}. ${r.question}\nAnswer: ${r.answer}`).join("\n\n");
     const header = "HOUSE INSPECTION REPORT\n" + "=".repeat(40) + "\n\n";
     const blob = new Blob([header + text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -120,7 +129,7 @@ const PDFPreview = () => {
 
         <div>
           <div className="space-y-3 mt-4">
-            {results.map((item, i) => (
+            {filteredResults.map((item, i) => (
               <div key={i}>
                 <p className="font-bold question">
                   {i + 1}. {item.question}
@@ -131,6 +140,16 @@ const PDFPreview = () => {
               </div>
             ))}
           </div>
+          
+          {filteredResults.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-border">
+              <div className="text-center">
+                <span className="rounded-lg bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+                  {answeredCount} out of {totalCount} questions answered
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
