@@ -7,10 +7,9 @@ const PDFPreview = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter out questions with "Not visible in image" answer
+  // Filter out questions with "Not visible in the image" answer
   const filteredResults = results.filter(item => 
-    item.answer.trim().toLowerCase() !== "not visible in the image" && 
-    item.answer.trim().toLowerCase() !== "no answer available"
+    item.answer.trim().toLowerCase() !== "not visible in the image" && item.answer.trim().toLowerCase() !== "no answer available"
   );
 
   const answeredCount = filteredResults.length;
