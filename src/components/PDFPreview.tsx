@@ -3,17 +3,23 @@ import { Download, FileText, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 const PDFPreview = () => {
-  const { results, uploadedImage } = useInspection();
+  const { results, uploadedImage, sessionHistory } = useInspection();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Get results from session history or current results
+  const displayResults = sessionHistory?.inspection_results?.[0]?.results?.question_answers || results;
+  
+  // Get image from session history or current uploaded image
+  const displayImage = sessionHistory?.images?.[0]?.image_url || uploadedImage;
+
   // Filter out questions with "Not visible in the image" answer
-  const filteredResults = results.filter(item => 
+  const filteredResults = displayResults.filter(item => 
     item.answer.trim().toLowerCase() !== "not visible in the image" && item.answer.trim().toLowerCase() !== "no answer available"
   );
 
   const answeredCount = filteredResults.length;
-  const totalCount = results.length;
+  const totalCount = displayResults.length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -120,9 +126,9 @@ const PDFPreview = () => {
 
       <div id="pdf-content" className="space-y-4">
         
-        {uploadedImage && (
+        {displayImage && (
           <div className="text-center">
-            <img src={uploadedImage} alt="Inspected property" className="inline-block rounded-xl" />
+            <img src={displayImage} alt="Inspected property" className="inline-block rounded-xl" />
           </div>
         )}
 

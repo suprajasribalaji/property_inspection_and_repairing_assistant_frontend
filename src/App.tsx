@@ -24,7 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<ImageAnalysisPage />} />
-              <Route path="chat" element={<ChatPage />} />
+              <Route path="inspection_report" element={<ChatPage />} />
               <Route path="report" element={<ReportPage />} />
             </Route>
             <Route path="/error" element={<ErrorPage />} />

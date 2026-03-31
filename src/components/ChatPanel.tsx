@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User } from "lucide-react";
 import { sendChatMessage } from "@/services/api";
+import { useInspection } from "@/context/InspectionContext";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -10,10 +11,35 @@ interface Message {
 }
 
 const ChatPanel = () => {
+  const { sessionHistory, results } = useInspection();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // Load conversation history from session
+  useEffect(() => {
+    if (sessionHistory?.conversations) {
+      const historyMessages = sessionHistory.conversations.map(conv => ({
+        role: conv.role as "user" | "assistant",
+        content: conv.message
+      }));
+      setMessages(historyMessages);
+    }
+  }, [sessionHistory]);
+
+  // Add inspection results as initial assistant message if available
+  useEffect(() => {
+    if (results && results.length > 0 && messages.length === 0) {
+      const resultsMessage = "I've completed the property inspection. Here are the key findings:\n\n" + 
+        results.map((item, index) => `${index + 1}. ${item.question}\n   ${item.answer}`).join('\n\n');
+      
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: resultsMessage
+      }]);
+    }
+  }, [results]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,7 +73,7 @@ const ChatPanel = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-muted-foreground">Ask a question about the inspection results...</p>
+            <p className="text-sm text-muted-foreground">Welcome! How can I help you with the inspection results?</p>
           </div>
         )}
         {messages.map((msg, i) => (

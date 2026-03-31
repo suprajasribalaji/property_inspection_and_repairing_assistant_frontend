@@ -1,6 +1,6 @@
 import { useInspection } from "@/context/InspectionContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Camera, MessageSquare, FileText, Bot } from "lucide-react";
+import { Camera, FileText, Bot } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Navbar = () => {
@@ -10,7 +10,7 @@ const Navbar = () => {
 
   const navItems = [
     { label: "Image Analysis", icon: Camera, path: "/", always: true },
-    { label: "Chat", icon: MessageSquare, path: "/chat", always: false },
+    { label: "Inspection Report", icon: FileText, path: "/inspection_report", always: false },
   ];
 
   return (
@@ -46,7 +46,7 @@ const Navbar = () => {
               return (
                 <Tooltip key={item.label}>
                   <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                  <TooltipContent>Complete image analysis first.</TooltipContent>
+                  <TooltipContent>Complete image analysis first to view results.</TooltipContent>
                 </Tooltip>
               );
             }

@@ -1,19 +1,39 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useInspection } from "@/context/InspectionContext";
+import { useSession } from "@/hooks/useSession";
 import { inspectImage } from "@/services/api";
 import ImageUploader from "@/components/ImageUploader";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import SimpleLoader from "@/components/SimpleLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { Scan } from "lucide-react";
 import { toast } from "sonner";
 import { log } from "console";
 
 const ImageAnalysisPage = () => {
-  const { uploadedFile, uploadedImage, setUploadedFile, setUploadedImage, setResults, setIsAnalyzed } = useInspection();
+  const {
+    uploadedFile,
+    uploadedImage,
+    setUploadedFile,
+    setUploadedImage,
+    setResults,
+    setInspectionStorage,
+    setIsAnalyzed,
+    setSessionId,
+  } = useInspection();
+  
+  const { sessionId, loading: sessionLoading } = useSession();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Update context with session ID when it changes
+  useEffect(() => {
+    if (sessionId) {
+      setSessionId(sessionId);
+    }
+  }, [sessionId, setSessionId]);
 
   // Check if we should preserve the image when coming back from error page
   useEffect(() => {
@@ -33,11 +53,11 @@ const ImageAnalysisPage = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!uploadedFile) return;
+    if (!uploadedFile || !sessionId) return;
     setLoading(true);
     try {
-      console.log('Starting analysis...');
-      const data = await inspectImage(uploadedFile);
+      console.log('Starting analysis with session:', sessionId);
+      const data = await inspectImage(uploadedFile, sessionId);
       console.log('Data:', data);
       
       // Check if results are valid before proceeding
@@ -54,10 +74,11 @@ const ImageAnalysisPage = () => {
       
       console.log('Analysis successful, setting results:', data.results);
       setResults(data.results);
+      setInspectionStorage(data.storage);
       console.log('Setting isAnalyzed to true');
       setIsAnalyzed(true);
       console.log('Navigating to chat page...');
-      navigate("/chat");
+      navigate("/inspection_report");
     } catch (error) {
       console.error('Analysis failed:', error);
       const errorMessage = error instanceof Error ? error.message : "Analysis failed. Please try again.";
@@ -74,7 +95,10 @@ const ImageAnalysisPage = () => {
 
   return (
     <>
-      <AnimatePresence>{loading && <LoadingOverlay />}</AnimatePresence>
+      <AnimatePresence>
+        {sessionLoading && <SimpleLoader />}
+        {loading && <LoadingOverlay />}
+      </AnimatePresence>
       <div className="flex min-h-screen items-center justify-center px-6 pt-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -93,7 +117,7 @@ const ImageAnalysisPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
-            disabled={!uploadedFile || loading}
+            disabled={!uploadedFile || loading || sessionLoading || !sessionId}
             className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scan className="h-4 w-4" />
