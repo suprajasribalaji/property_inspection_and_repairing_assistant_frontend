@@ -39,7 +39,7 @@ const ChatPanel = () => {
         content: resultsMessage
       }]);
     }
-  }, [results]);
+  }, [results, messages.length]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
