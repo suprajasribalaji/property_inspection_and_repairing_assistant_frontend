@@ -20,9 +20,9 @@ const ChatPanel = () => {
   // Load conversation history from session
   useEffect(() => {
     if (sessionHistory?.conversations) {
-      const historyMessages = sessionHistory.conversations.map(conv => ({
-        role: conv.role as "user" | "assistant",
-        content: conv.message
+      const historyMessages: Message[] = sessionHistory.conversations.map((conv) => ({
+        role: (conv.role === "user" ? "user" : "assistant") as "user" | "assistant",
+        content: conv.message,
       }));
       setMessages(historyMessages);
     }
@@ -30,14 +30,46 @@ const ChatPanel = () => {
 
   // Add inspection results as initial assistant message if available
   useEffect(() => {
-    if (results && results.length > 0 && messages.length === 0) {
-      const resultsMessage = "I've completed the property inspection. Here are the key findings:\n\n" + 
-        results.map((item, index) => `${index + 1}. ${item.question}\n   ${item.answer}`).join('\n\n');
-      
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: resultsMessage
-      }]);
+    if (results && results.length > 0) {
+      const resultsIntroPrefix = "I've completed the property inspection.";
+      const hasResultsIntro = messages.some(
+        (m) => m.role === "assistant" && m.content.startsWith(resultsIntroPrefix)
+      );
+
+      const validResults = results.filter((item) => {
+        const ans = (item.answer || "").trim().toLowerCase();
+        return (
+          ans !== "not visible in the image" && ans !== "no answer available"
+        );
+      });
+
+      const promptMessage =
+        validResults.length > 0
+          ? "Based on the key findings, do you have any queries to clarify?"
+          : "I couldn’t find any actionable key findings. Do you have any queries to clarify?";
+
+      // If an intro message already exists (from saved conversation), replace it.
+      if (hasResultsIntro) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.role === "assistant" && m.content.startsWith(resultsIntroPrefix)
+              ? { ...m, content: promptMessage }
+              : m
+          )
+        );
+        return;
+      }
+
+      // Otherwise, only insert the prompt when the conversation is empty.
+      if (messages.length === 0) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: promptMessage,
+          },
+        ]);
+      }
     }
   }, [results, messages.length]);
 
@@ -93,7 +125,7 @@ const ChatPanel = () => {
                 msg.role === "user"
                   ? "gradient-bg text-primary-foreground"
                   : "bg-secondary text-foreground"
-              }`}
+              } whitespace-pre-wrap break-words`}
             >
               {msg.content}
             </div>

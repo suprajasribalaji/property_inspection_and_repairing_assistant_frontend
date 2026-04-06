@@ -18,13 +18,16 @@ const ChatPage = () => {
     setUploadedImage, 
     setIsAnalyzed, 
     setSessionId: setContextSessionId,
-    setSessionHistory 
+    setSessionHistory,
+    results,
+    isAnalyzed
   } = useInspection();
 
-  const [latestSessionHistory, setLatestSessionHistory] = useState(null);
   const [leftPanelWidth, setLeftPanelWidth] = useState(65); // percentage
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const restoredForSessionIdRef = useRef<string | null>(null);
+  const [isRestoringLatestResults, setIsRestoringLatestResults] = useState(true);
 
   // Panel constraints
   const LEFT_PANEL_MIN = 30; // 30% minimum
@@ -35,6 +38,7 @@ const ChatPage = () => {
   // Fetch latest session with results from DB and restore context from it
   useEffect(() => {
     const restoreFromLatestSessionWithResults = async () => {
+      setIsRestoringLatestResults(true);
       try {
         // Get latest session that has inspection results
         const latestSession = await getLatestSessionWithResults();
@@ -47,7 +51,6 @@ const ChatPage = () => {
           // Get full history for latest session
           const latestHistory = await getSessionHistory(latestSession.id);
           console.log('Latest session history with results:', latestHistory);
-          setLatestSessionHistory(latestHistory);
           
           // Restore context from latest session (not current session)
           if (latestHistory) {
@@ -71,41 +74,55 @@ const ChatPage = () => {
               console.log('Restoring image from latest session:', latestImage.image_url);
               setUploadedImage(latestImage.image_url);
             }
+
+            // Restore finished; allow the UI to render.
+            setIsRestoringLatestResults(false);
+          } else {
+            // No history payload; don't block the UI forever.
+            setIsRestoringLatestResults(false);
           }
         } else {
           console.log('No session with results found, using current session');
           // Fallback to current session if no session with results found
-          if (sessionHistory && sessionId) {
+          // (Don't rely on `sessionHistory` being populated yet; fetch it directly.)
+          if (sessionId) {
+            const { getSessionHistory } = await import('@/services/api');
+            const currentHistory = await getSessionHistory(sessionId);
             setContextSessionId(sessionId);
-            setSessionHistory(sessionHistory);
-            
-            const latestResult = sessionHistory.inspection_results?.[0];
+            setSessionHistory(currentHistory);
+
+            const latestResult = currentHistory.inspection_results?.[0];
             if (latestResult?.results?.question_answers) {
               setResults(latestResult.results.question_answers);
               setIsAnalyzed(true);
             }
-            
-            const latestImage = sessionHistory.images?.[0];
+
+            const latestImage = currentHistory.images?.[0];
             if (latestImage?.image_url) {
               setUploadedImage(latestImage.image_url);
             }
+
+            // Restore finished; allow the UI to render.
+            setIsRestoringLatestResults(false);
+          } else {
+            setIsRestoringLatestResults(false);
           }
         }
       } catch (error) {
         console.error('Error restoring from latest session:', error);
-        // Fallback to current session
-        if (sessionHistory && sessionId) {
-          setContextSessionId(sessionId);
-          setSessionHistory(sessionHistory);
-        }
+        // If restore fails, don't retry endlessly; the rest of the page can still work
+        // with whatever is already in context.
+        setIsRestoringLatestResults(false);
       }
     };
 
-    // Only run when session is loaded
-    if (!sessionLoading) {
+    // Only run when session is loaded, and only once per sessionId.
+    if (!sessionLoading && sessionId) {
+      if (restoredForSessionIdRef.current === sessionId) return;
+      restoredForSessionIdRef.current = sessionId;
       restoreFromLatestSessionWithResults();
     }
-  }, [sessionLoading, sessionHistory, sessionId, setResults, setUploadedImage, setIsAnalyzed, setContextSessionId, setSessionHistory]);
+  }, [sessionLoading, sessionId]);
 
   // Handle mouse move for resizing
   useEffect(() => {
@@ -142,6 +159,17 @@ const ChatPage = () => {
   }, [isResizing, LEFT_PANEL_MIN, LEFT_PANEL_MAX]);
   
   if (sessionLoading) {
+    return <SimpleLoader />;
+  }
+
+  // Keep the loader visible until the restore flow finishes populating results.
+  if (isRestoringLatestResults) {
+    return <SimpleLoader />;
+  }
+
+  // Extra guard: don't render the chat UI until results are actually in context.
+  // This prevents a brief "blank" period during state restoration.
+  if (sessionId && !isAnalyzed && (!results || results.length === 0)) {
     return <SimpleLoader />;
   }
 

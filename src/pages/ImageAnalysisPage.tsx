@@ -117,7 +117,7 @@ const ImageAnalysisPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
-            disabled={!uploadedFile || loading || sessionLoading || !sessionId}
+            disabled={!uploadedFile || loading}
             className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scan className="h-4 w-4" />
