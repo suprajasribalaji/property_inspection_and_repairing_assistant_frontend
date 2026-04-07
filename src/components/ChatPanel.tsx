@@ -1,19 +1,94 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User } from "lucide-react";
 import { sendChatMessage } from "@/services/api";
+import { useInspection } from "@/context/InspectionContext";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
+const normalizeAssistantContent = (text: string) =>
+  text
+    // Normalize Windows line endings.
+    .replace(/\r\n/g, "\n")
+    // Remove large whitespace-only blank blocks.
+    .replace(/\n[ \t]*\n[ \t]*\n+/g, "\n\n")
+    // Remove extra blank lines after section labels ending with ":".
+    .replace(/:\n[ \t]*\n+/g, ":\n")
+    // Trim accidental leading/trailing empty lines.
+    .trim();
+
 const ChatPanel = () => {
+  const { sessionHistory, results } = useInspection();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const hasConversationHistory = (sessionHistory?.conversations?.length || 0) > 0;
+
+  // Load conversation history from session
+  useEffect(() => {
+    if (sessionHistory?.conversations) {
+      const historyMessages: Message[] = sessionHistory.conversations.map((conv) => ({
+        role: (conv.role === "user" ? "user" : "assistant") as "user" | "assistant",
+        content: conv.message,
+      }));
+      setMessages(historyMessages);
+    }
+  }, [sessionHistory]);
+
+  // Add inspection results as initial assistant message if available
+  useEffect(() => {
+    // When history exists (e.g. after refresh), preserve history exactly as-is.
+    if (hasConversationHistory) return;
+
+    if (results && results.length > 0) {
+      const resultsIntroPrefix = "I've completed the property inspection.";
+      const hasResultsIntro = messages.some(
+        (m) => m.role === "assistant" && m.content.startsWith(resultsIntroPrefix)
+      );
+
+      const validResults = results.filter((item) => {
+        const ans = (item.answer || "").trim().toLowerCase();
+        return (
+          ans !== "not visible in the image" && ans !== "no answer available"
+        );
+      });
+
+      const promptMessage =
+        validResults.length > 0
+          ? "Based on the key findings, do you have any queries to clarify?"
+          : "I couldn’t find any actionable key findings. Do you have any queries to clarify?";
+
+      // If an intro message already exists (from saved conversation), replace it.
+      if (hasResultsIntro) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.role === "assistant" && m.content.startsWith(resultsIntroPrefix)
+              ? { ...m, content: promptMessage }
+              : m
+          )
+        );
+        return;
+      }
+
+      // Otherwise, only insert the prompt when the conversation is empty.
+      if (messages.length === 0) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: promptMessage,
+          },
+        ]);
+      }
+    }
+  }, [results, messages.length, hasConversationHistory]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,7 +122,7 @@ const ChatPanel = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-muted-foreground">Ask a question about the inspection results...</p>
+            <p className="text-sm text-muted-foreground">Welcome! How can I help you with the inspection results?</p>
           </div>
         )}
         {messages.map((msg, i) => (
@@ -67,9 +142,24 @@ const ChatPanel = () => {
                 msg.role === "user"
                   ? "gradient-bg text-primary-foreground"
                   : "bg-secondary text-foreground"
-              }`}
+              } whitespace-pre-wrap break-words`}
             >
-              {msg.content}
+              {msg.role === "assistant" ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="mb-1.5 list-disc pl-5">{children}</ul>,
+                    ol: ({ children }) => <ol className="mb-1.5 list-decimal pl-5">{children}</ol>,
+                    li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                  }}
+                >
+                  {normalizeAssistantContent(msg.content)}
+                </ReactMarkdown>
+              ) : (
+                msg.content
+              )}
             </div>
             {msg.role === "user" && (
               <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5">

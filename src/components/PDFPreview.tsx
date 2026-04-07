@@ -3,9 +3,23 @@ import { Download, FileText, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 const PDFPreview = () => {
-  const { results, uploadedImage } = useInspection();
+  const { results, uploadedImage, sessionHistory } = useInspection();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get results from session history or current results
+  const displayResults = sessionHistory?.inspection_results?.[0]?.results?.question_answers || results;
+  
+  // Get image from session history or current uploaded image
+  const displayImage = sessionHistory?.images?.[0]?.image_url || uploadedImage;
+
+  // Filter out questions with "Not visible in the image" answer
+  const filteredResults = displayResults.filter(item => 
+    item.answer.trim().toLowerCase() !== "not visible in the image" && item.answer.trim().toLowerCase() !== "no answer available"
+  );
+
+  const answeredCount = filteredResults.length;
+  const totalCount = displayResults.length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -19,7 +33,7 @@ const PDFPreview = () => {
   }, []);
 
   const handleDownload = () => {
-    const text = results.map((r, i) => `${i + 1}. ${r.question}\nAnswer: ${r.answer}`).join("\n\n");
+    const text = filteredResults.map((r, i) => `${i + 1}. ${r.question}\nAnswer: ${r.answer}`).join("\n\n");
     const header = "HOUSE INSPECTION REPORT\n" + "=".repeat(40) + "\n\n";
     const blob = new Blob([header + text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -112,15 +126,15 @@ const PDFPreview = () => {
 
       <div id="pdf-content" className="space-y-4">
         
-        {uploadedImage && (
+        {displayImage && (
           <div className="text-center">
-            <img src={uploadedImage} alt="Inspected property" className="inline-block rounded-xl" />
+            <img src={displayImage} alt="Inspected property" className="inline-block rounded-xl" />
           </div>
         )}
 
         <div>
           <div className="space-y-3 mt-4">
-            {results.map((item, i) => (
+            {filteredResults.map((item, i) => (
               <div key={i}>
                 <p className="font-bold question">
                   {i + 1}. {item.question}
@@ -131,6 +145,16 @@ const PDFPreview = () => {
               </div>
             ))}
           </div>
+          
+          {filteredResults.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-border">
+              <div className="text-center">
+                <span className="rounded-lg bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+                  {answeredCount} out of {totalCount} questions answered
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

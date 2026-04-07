@@ -8,25 +8,38 @@ const InspectionResults = () => {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
-  const filtered = results.filter(
+  // Filter out questions with "Not visible in image" answer
+  const validResults = results.filter(item => 
+    item.answer.trim().toLowerCase() !== "not visible in the image" && 
+    item.answer.trim().toLowerCase() !== "no answer available"
+  );
+
+  const answeredCount = validResults.length;
+  const totalCount = results.length;
+
+  const filtered = validResults.filter(
     (r) => r.question.toLowerCase().includes(search.toLowerCase()) || r.answer.toLowerCase().includes(search.toLowerCase())
   );
 
   const toggle = (i: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+      }
       return next;
     });
   };
 
   const handleDownload = () => {
-    const text = results.map((r) => `${r.question}\nAnswer: ${r.answer}`).join("\n\n");
+    const text = validResults.map((r) => `${r.question}\nAnswer: ${r.answer}`).join("\n\n");
     const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "inspection_results.txt";
+    a.download = "inspection_report.txt";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -79,6 +92,15 @@ const InspectionResults = () => {
         })}
         {filtered.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">No results found.</p>
+        )}
+        {validResults.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="text-center">
+              <span className="rounded-lg bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+                {answeredCount} out of {totalCount} questions answered
+              </span>
+            </div>
+          </div>
         )}
       </div>
     </div>
