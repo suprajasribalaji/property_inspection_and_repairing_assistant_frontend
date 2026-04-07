@@ -3,43 +3,44 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ImageUploaderProps {
-  file: File | null;
-  preview: string | null;
-  onFileSelect: (file: File) => void;
+  files: File[];
+  previews: string[];
+  onFileSelect: (files: File[]) => void;
   onRemove: () => void;
 }
 
-const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderProps) => {
+const ImageUploader = ({ files, previews, onFileSelect, onRemove }: ImageUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const hasFiles = files.length > 0;
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
-      const f = e.dataTransfer.files[0];
-      if (f && f.type.startsWith("image/")) onFileSelect(f);
+      const selected = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+      if (selected.length) onFileSelect(selected);
     },
     [onFileSelect]
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) onFileSelect(f);
+    const selected = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    if (selected.length) onFileSelect(selected);
   };
 
   return (
     <div
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      onClick={() => !file && inputRef.current?.click()}
+      onClick={() => !hasFiles && inputRef.current?.click()}
       className={`relative mx-auto w-full max-w-md rounded-2xl border-2 border-dashed transition-all ${
-        file
+        hasFiles
           ? "border-primary/30 bg-card"
           : "cursor-pointer border-muted-foreground/20 bg-card hover:border-primary/50 hover:bg-secondary/50"
       } shadow-card`}
     >
-      <input ref={inputRef} type="file" accept="image/*" onChange={handleChange} className="hidden" />
+      <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleChange} className="hidden" />
       <AnimatePresence mode="wait">
-        {preview && file ? (
+        {hasFiles ? (
           <motion.div
             key="preview"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -47,8 +48,12 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
             exit={{ opacity: 0, scale: 0.95 }}
             className="p-4"
           >
-            <div className="relative overflow-hidden rounded-xl">
-              <img src={preview} alt="Preview" className="w-full rounded-xl object-cover" style={{ maxHeight: 256 }} />
+            <div className="grid grid-cols-2 gap-2">
+              {previews.slice(0, 4).map((preview, idx) => (
+                <img key={`${files[idx]?.name || idx}-${idx}`} src={preview} alt={`Preview ${idx + 1}`} className="w-full rounded-xl object-cover" style={{ maxHeight: 140 }} />
+              ))}
+            </div>
+            <div className="relative mt-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -59,7 +64,7 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-3 truncate text-center text-sm text-muted-foreground">{file.name}</p>
+            <p className="mt-3 truncate text-center text-sm text-muted-foreground">{files.length} image(s) selected</p>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -67,7 +72,7 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
               }}
               className="mx-auto mt-2 block text-xs text-primary underline"
             >
-              Change image
+              Change images
             </button>
           </motion.div>
         ) : (
@@ -82,8 +87,8 @@ const ImageUploader = ({ file, preview, onFileSelect, onRemove }: ImageUploaderP
               <Upload className="h-8 w-8 text-primary" />
             </div>
             <div className="text-center">
-              <p className="text-base font-medium text-foreground">Drag & drop your house image</p>
-              <p className="mt-1 text-sm text-muted-foreground">or click to browse files</p>
+              <p className="text-base font-medium text-foreground">Drag & drop your house images</p>
+              <p className="mt-1 text-sm text-muted-foreground">or click to browse files (multiple allowed)</p>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <ImageIcon className="h-3.5 w-3.5" />
