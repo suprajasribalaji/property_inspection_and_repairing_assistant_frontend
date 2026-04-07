@@ -1,17 +1,23 @@
 import { useInspection } from "@/context/InspectionContext";
-import { Download, FileText, ChevronDown } from "lucide-react";
+import { Download, FileText, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 const PDFPreview = () => {
   const { results, uploadedImage, sessionHistory } = useInspection();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get results from session history or current results
   const displayResults = sessionHistory?.inspection_results?.[0]?.results?.question_answers || results;
   
-  // Get image from session history or current uploaded image
-  const displayImage = sessionHistory?.images?.[0]?.image_url || uploadedImage;
+  // Get images from session history (multi-image) or current uploaded image fallback
+  const displayImages = (sessionHistory?.images || [])
+    .map((img) => img.image_url)
+    .filter((u) => !!u);
+  const hasSessionImages = displayImages.length > 0;
+  const carouselImages = hasSessionImages ? displayImages : (uploadedImage ? [uploadedImage] : []);
+  const displayImage = carouselImages[activeImageIndex] || null;
 
   // Filter out questions with "Not visible in the image" answer
   const filteredResults = displayResults.filter(item => 
@@ -31,6 +37,22 @@ const PDFPreview = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (activeImageIndex >= carouselImages.length) {
+      setActiveImageIndex(0);
+    }
+  }, [carouselImages.length, activeImageIndex]);
+
+  const goPrev = () => {
+    if (carouselImages.length <= 1) return;
+    setActiveImageIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+  };
+
+  const goNext = () => {
+    if (carouselImages.length <= 1) return;
+    setActiveImageIndex((prev) => (prev + 1) % carouselImages.length);
+  };
 
   const handleDownload = () => {
     const text = filteredResults.map((r, i) => `${i + 1}. ${r.question}\nAnswer: ${r.answer}`).join("\n\n");
@@ -129,6 +151,25 @@ const PDFPreview = () => {
         {displayImage && (
           <div className="text-center">
             <img src={displayImage} alt="Inspected property" className="inline-block rounded-xl" />
+            {carouselImages.length > 1 && (
+              <div className="mt-2 flex items-center justify-center gap-3">
+                <button
+                  onClick={goPrev}
+                  className="rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Image {activeImageIndex + 1} of {carouselImages.length}
+                </span>
+                <button
+                  onClick={goNext}
+                  className="rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
