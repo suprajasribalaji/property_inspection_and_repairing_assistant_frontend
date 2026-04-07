@@ -8,7 +8,6 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import SimpleLoader from "@/components/SimpleLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { Scan } from "lucide-react";
-import { toast } from "sonner";
 
 const ImageAnalysisPage = () => {
   const {
@@ -22,7 +21,7 @@ const ImageAnalysisPage = () => {
     setSessionId,
   } = useInspection();
   
-  const { sessionId, loading: sessionLoading } = useSession();
+  const { sessionId, loading: sessionLoading, createNewSession } = useSession();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,15 +53,19 @@ const ImageAnalysisPage = () => {
   const handleAnalyze = async () => {
     if (!uploadedFile) return;
 
-    if (!sessionId) {
-      toast.error("Session is still initializing. Please wait a moment and try again.");
-      return;
-    }
-
     setLoading(true);
     try {
-      console.log('Starting analysis with session:', sessionId);
-      const data = await inspectImage(uploadedFile, sessionId);
+      let activeSessionId = sessionId;
+
+      // If session bootstrapping failed earlier, create one on demand.
+      if (!activeSessionId) {
+        const newSession = await createNewSession();
+        activeSessionId = newSession.id;
+        setSessionId(newSession.id);
+      }
+
+      console.log('Starting analysis with session:', activeSessionId);
+      const data = await inspectImage(uploadedFile, activeSessionId);
       console.log('Data:', data);
       
       // Check if results are valid before proceeding
@@ -122,7 +125,7 @@ const ImageAnalysisPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
-            disabled={!uploadedFile || loading || sessionLoading || !sessionId}
+            disabled={!uploadedFile || loading || sessionLoading}
             className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scan className="h-4 w-4" />
