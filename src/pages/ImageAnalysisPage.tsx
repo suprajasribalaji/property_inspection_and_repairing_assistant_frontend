@@ -9,7 +9,6 @@ import SimpleLoader from "@/components/SimpleLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { Scan } from "lucide-react";
 import { toast } from "sonner";
-import { log } from "console";
 
 const ImageAnalysisPage = () => {
   const {
@@ -53,7 +52,13 @@ const ImageAnalysisPage = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!uploadedFile || !sessionId) return;
+    if (!uploadedFile) return;
+
+    if (!sessionId) {
+      toast.error("Session is still initializing. Please wait a moment and try again.");
+      return;
+    }
+
     setLoading(true);
     try {
       console.log('Starting analysis with session:', sessionId);
@@ -117,7 +122,7 @@ const ImageAnalysisPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
-            disabled={!uploadedFile || loading}
+            disabled={!uploadedFile || loading || sessionLoading || !sessionId}
             className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scan className="h-4 w-4" />

@@ -4,11 +4,24 @@ import { sendChatMessage } from "@/services/api";
 import { useInspection } from "@/context/InspectionContext";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+const normalizeAssistantContent = (text: string) =>
+  text
+    // Normalize Windows line endings.
+    .replace(/\r\n/g, "\n")
+    // Remove large whitespace-only blank blocks.
+    .replace(/\n[ \t]*\n[ \t]*\n+/g, "\n\n")
+    // Remove extra blank lines after section labels ending with ":".
+    .replace(/:\n[ \t]*\n+/g, ":\n")
+    // Trim accidental leading/trailing empty lines.
+    .trim();
 
 const ChatPanel = () => {
   const { sessionHistory, results } = useInspection();
@@ -16,6 +29,7 @@ const ChatPanel = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const hasConversationHistory = (sessionHistory?.conversations?.length || 0) > 0;
 
   // Load conversation history from session
   useEffect(() => {
@@ -30,6 +44,9 @@ const ChatPanel = () => {
 
   // Add inspection results as initial assistant message if available
   useEffect(() => {
+    // When history exists (e.g. after refresh), preserve history exactly as-is.
+    if (hasConversationHistory) return;
+
     if (results && results.length > 0) {
       const resultsIntroPrefix = "I've completed the property inspection.";
       const hasResultsIntro = messages.some(
@@ -71,7 +88,7 @@ const ChatPanel = () => {
         ]);
       }
     }
-  }, [results, messages.length]);
+  }, [results, messages.length, hasConversationHistory]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -127,7 +144,22 @@ const ChatPanel = () => {
                   : "bg-secondary text-foreground"
               } whitespace-pre-wrap break-words`}
             >
-              {msg.content}
+              {msg.role === "assistant" ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="mb-1.5 list-disc pl-5">{children}</ul>,
+                    ol: ({ children }) => <ol className="mb-1.5 list-decimal pl-5">{children}</ol>,
+                    li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                  }}
+                >
+                  {normalizeAssistantContent(msg.content)}
+                </ReactMarkdown>
+              ) : (
+                msg.content
+              )}
             </div>
             {msg.role === "user" && (
               <div className="mt-0.5 rounded-lg bg-accent/10 p-1.5">
