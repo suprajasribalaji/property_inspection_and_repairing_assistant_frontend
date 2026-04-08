@@ -31,7 +31,6 @@ export interface BackendResponse {
     answer: string;
   }>;
   storage: InspectionStorageInfo | null;
-  storage_items?: InspectionStorageInfo[];
 }
 
 export interface ChatResponse {
@@ -137,11 +136,11 @@ export const getAllSessions = async (): Promise<{ sessions: Session[] }> => {
   }
 };
 
-export const inspectImage = async (images: File[], sessionId?: string): Promise<InspectResponse & { session_id: string }> => {
+export const inspectImage = async (image: File, sessionId?: string): Promise<InspectResponse & { session_id: string }> => {
   try {
-    console.log('Sending images to API:', images.map((img) => ({ name: img.name, size: img.size, type: img.type })));
+    console.log('Sending image to API:', image.name, 'Size:', image.size, 'Type:', image.type);
     const formData = new FormData();
-    images.forEach((image) => formData.append("files", image));
+    formData.append("file", image);  // Backend expects "file"
     
     if (sessionId) {
       formData.append("session_id", sessionId);

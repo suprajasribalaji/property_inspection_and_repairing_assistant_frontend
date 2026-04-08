@@ -23,8 +23,6 @@ const ImageAnalysisPage = () => {
   
   const { sessionId, loading: sessionLoading, createNewSession } = useSession();
   const [loading, setLoading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [selectedPreviews, setSelectedPreviews] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,25 +40,18 @@ const ImageAnalysisPage = () => {
     }
   }, [location.state, uploadedFile]);
 
-  const handleFileSelect = (files: File[]) => {
-    setSelectedFiles(files);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setSelectedPreviews(previews);
-    // Keep legacy single-image context fields populated for existing UI components.
-    setUploadedFile(files[0] || null);
-    setUploadedImage(previews[0] || null);
+  const handleFileSelect = (file: File) => {
+    setUploadedFile(file);
+    setUploadedImage(URL.createObjectURL(file));
   };
 
   const handleRemove = () => {
-    selectedPreviews.forEach((url) => URL.revokeObjectURL(url));
-    setSelectedFiles([]);
-    setSelectedPreviews([]);
     setUploadedFile(null);
     setUploadedImage(null);
   };
 
   const handleAnalyze = async () => {
-    if (selectedFiles.length === 0) return;
+    if (!uploadedFile) return;
 
     setLoading(true);
     try {
@@ -74,7 +65,7 @@ const ImageAnalysisPage = () => {
       }
 
       console.log('Starting analysis with session:', activeSessionId);
-      const data = await inspectImage(selectedFiles, activeSessionId);
+      const data = await inspectImage(uploadedFile, activeSessionId);
       console.log('Data:', data);
       
       // Check if results are valid before proceeding
@@ -127,18 +118,18 @@ const ImageAnalysisPage = () => {
             <span className="text-[#9169C1]">Assistant</span>
           </h1>
           <p className="mx-auto mb-8 max-w-md text-xm text-[#42326E]">
-            Upload one or more property photos and let AI analyze them across 100 inspection criteria.
+            Upload a photo of your property and let AI analyze it across 100 inspection criteria instantly.
           </p>
-          <ImageUploader files={selectedFiles} previews={selectedPreviews} onFileSelect={handleFileSelect} onRemove={handleRemove} />
+          <ImageUploader file={uploadedFile} preview={uploadedImage} onFileSelect={handleFileSelect} onRemove={handleRemove} />
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
-            disabled={selectedFiles.length === 0 || loading || sessionLoading}
+            disabled={!uploadedFile || loading || sessionLoading}
             className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scan className="h-4 w-4" />
-            Analyze Images
+            Analyze Image
           </motion.button>
         </motion.div>
       </div>
