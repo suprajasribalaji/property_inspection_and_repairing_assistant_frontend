@@ -1,6 +1,6 @@
 import { useInspection } from "@/context/InspectionContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Camera, FileText, Bot } from "lucide-react";
+import { Camera, FileText, Bot, LogOut } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Navbar = () => {
@@ -12,6 +12,11 @@ const Navbar = () => {
     { label: "Image Analysis", icon: Camera, path: "/", always: true },
     { label: "Inspection Report", icon: FileText, path: "/inspection_report", always: false },
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    navigate("/auth");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border bg-card/80 backdrop-blur-xl">
@@ -52,6 +57,16 @@ const Navbar = () => {
             }
             return btn;
           })}
+          
+          <div className="ml-2 pl-2 border-l border-border h-6 flex items-center">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </nav>

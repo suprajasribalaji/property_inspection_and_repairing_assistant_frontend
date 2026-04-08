@@ -7,6 +7,14 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("authToken");
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export interface InspectionItem {
   question: string;
   answer: string;
@@ -197,6 +205,38 @@ export const sendChatMessage = async (question: string): Promise<ChatResponse> =
       console.error('Chat Error details:', error.response?.data);
       console.error('Chat Status:', error.response?.status);
     }
+    throw error;
+  }
+};
+
+// Auth management functions
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    created_at: string;
+  };
+}
+
+export const registerUser = async (data: any): Promise<AuthResponse> => {
+  try {
+    const response = await api.post<AuthResponse>("/api/auth/register", data);
+    return response.data;
+  } catch (error) {
+    console.error("Register Error:", error);
+    throw error;
+  }
+};
+
+export const loginUser = async (data: any): Promise<AuthResponse> => {
+  try {
+    const response = await api.post<AuthResponse>("/api/auth/login", data);
+    return response.data;
+  } catch (error) {
+    console.error("Login Error:", error);
     throw error;
   }
 };

@@ -11,6 +11,7 @@ import ReportPage from "@/pages/ReportPage";
 import ErrorPage from "@/pages/ErrorPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ServerErrorPage from "./pages/ServerErrorPage";
+import AuthPage from "@/pages/AuthPage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="inspection_report" element={<ChatPage />} />
               <Route path="report" element={<ReportPage />} />
             </Route>
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="/error" element={<ErrorPage />} />
             <Route path="/server-error" element={<ServerErrorPage />} />
             <Route path="*" element={<NotFoundPage />} />
@@ -38,3 +40,4 @@ const App = () => (
 );
 
 export default App;
+
