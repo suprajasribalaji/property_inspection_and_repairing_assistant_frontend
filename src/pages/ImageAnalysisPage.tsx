@@ -19,6 +19,7 @@ const ImageAnalysisPage = () => {
     setInspectionStorage,
     setIsAnalyzed,
     setSessionId,
+    setSessionHistory,
   } = useInspection();
   
   const { sessionId, loading: sessionLoading, createNewSession } = useSession();
@@ -55,14 +56,14 @@ const ImageAnalysisPage = () => {
 
     setLoading(true);
     try {
-      let activeSessionId = sessionId;
-
-      // If session bootstrapping failed earlier, create one on demand.
-      if (!activeSessionId) {
-        const newSession = await createNewSession();
-        activeSessionId = newSession.id;
-        setSessionId(newSession.id);
-      }
+      // Clear out previous context state so UI doesn't hold onto old data
+      setResults([]);
+      setSessionHistory(null);
+      
+      // Always create a new session for a new analysis to prevent appending to the old session's report and chat
+      const newSession = await createNewSession();
+      const activeSessionId = newSession.id;
+      setSessionId(newSession.id);
 
       console.log('Starting analysis with session:', activeSessionId);
       const data = await inspectImage(uploadedFile, activeSessionId);
