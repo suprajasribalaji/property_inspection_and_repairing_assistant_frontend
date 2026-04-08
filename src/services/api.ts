@@ -140,7 +140,7 @@ export const inspectImage = async (image: File, sessionId?: string): Promise<Ins
   try {
     console.log('Sending image to API:', image.name, 'Size:', image.size, 'Type:', image.type);
     const formData = new FormData();
-    formData.append("file", image);  // Backend expects "file"
+    formData.append("files", image);  // Backend expects "files"
     
     if (sessionId) {
       formData.append("session_id", sessionId);
