@@ -88,12 +88,22 @@ const ImageAnalysisPage = () => {
       setIsAnalyzed(true);
       console.log('Navigating to chat page...');
       navigate("/inspection_report");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Analysis failed:', error);
-      const errorMessage = error instanceof Error ? error.message : "Analysis failed. Please try again.";
+      let errorMessage = "Analysis failed. Please try again.";
+      let errorCode = 500;
+      
+      if (error.isAxiosError && error.response) {
+        errorCode = error.response.status;
+        errorMessage = error.response.data?.detail || error.message;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       navigate("/error", { 
         state: { 
-          error: errorMessage,
+          errorMessage,
+          errorCode,
           preserveImage: true
         } 
       });
