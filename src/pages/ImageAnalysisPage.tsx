@@ -70,11 +70,19 @@ const ImageAnalysisPage = () => {
       console.log('Data:', data);
       
       // Check if results are valid before proceeding
-      if (!data.results || data.results.length === 0) {
-        console.log('No results from analysis, navigating to error page');
+      const invalidAnswers = new Set([
+        "not visible in the image",
+        "no answer available",
+      ]);
+      const hasUsefulResults = data.results && data.results.length > 0 &&
+        data.results.some((r: any) => !invalidAnswers.has((r.answer || "").trim().toLowerCase()));
+
+      if (!hasUsefulResults) {
+        console.log('No useful results from analysis, navigating to error page');
         navigate("/error", { 
           state: { 
-            error: "No inspection results found. The analysis returned empty results.",
+            errorMessage: "The AI could not find any visible inspection findings in this image. Please upload a clearer or more detailed property photo.",
+            errorCode: 422,
             preserveImage: true
           } 
         });
