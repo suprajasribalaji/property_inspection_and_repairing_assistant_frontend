@@ -210,6 +210,17 @@ export const sendChatMessage = async (question: string): Promise<ChatResponse> =
 };
 
 // Auth management functions
+export interface UserSignup {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface UserLogin {
+  email: string;
+  password: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
@@ -221,7 +232,7 @@ export interface AuthResponse {
   };
 }
 
-export const registerUser = async (data: any): Promise<AuthResponse> => {
+export const registerUser = async (data: UserSignup): Promise<AuthResponse> => {
   try {
     const response = await api.post<AuthResponse>("/api/auth/register", data);
     return response.data;
@@ -231,7 +242,7 @@ export const registerUser = async (data: any): Promise<AuthResponse> => {
   }
 };
 
-export const loginUser = async (data: any): Promise<AuthResponse> => {
+export const loginUser = async (data: UserLogin): Promise<AuthResponse> => {
   try {
     const response = await api.post<AuthResponse>("/api/auth/login", data);
     return response.data;
