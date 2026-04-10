@@ -55,7 +55,7 @@ const AuthPage = () => {
 
   const strength = getStrength(password);
   const isPasswordStrong = !isLogin ? strength === 5 : true;
-  const isEmailValid = !isLogin ? emailRules.every(r => r.test(email)) : true;
+  const isEmailValid = !isLogin ? emailRules.every(r => r.test(email)) : email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   // Debounced email validation
   const validateEmail = useCallback(async (email: string) => {
@@ -166,7 +166,9 @@ const AuthPage = () => {
         navigate("/");
       }
     } catch (error: unknown) {
-      let errorMessage = "Authentication failed. Please check your credentials.";
+      let errorMessage = isLogin 
+        ? "Sign in failed. Please check your email and password."
+        : "Account creation failed. Please check your information and try again.";
       
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { detail?: string } } };
@@ -231,7 +233,7 @@ const AuthPage = () => {
             <div className="mb-5 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-2 duration-300">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                <p className="font-semibold">{isLogin ? "Please ensure you have an account!" : "Ensure you followed all the field's rules!"}</p>
+                <p className="font-semibold">{isLogin ? "Sign In Error" : "Sign Up Error"}</p>
                 <p className="text-destructive/80 text-xs mt-0.5">{authError}</p>
               </div>
               <button
@@ -290,7 +292,7 @@ const AuthPage = () => {
                     {emailError ? (
                       <X className="h-4 w-4 text-destructive" />
                     ) : (
-                      /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)
+                      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                         ? <Check className="h-4 w-4 text-green-500" />
                         : <X className="h-4 w-4 text-destructive" />
                     )}
@@ -307,7 +309,7 @@ const AuthPage = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="•••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
@@ -368,6 +370,18 @@ const AuthPage = () => {
               {isLoading ? "Please wait..." : (isLogin ? "Sign In" : "Create Account")}
             </Button>
           </form>
+
+          {/* Desktop toggle */}
+          <p className="mt-6 hidden text-center text-sm text-muted-foreground lg:block">
+            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => { setIsLogin((v) => !v); setAuthError(""); }}
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              {isLogin ? "Sign Up" : "Log In"}
+            </button>
+          </p>
 
           {/* Mobile toggle */}
           <p className="mt-6 text-center text-sm text-muted-foreground lg:hidden">
