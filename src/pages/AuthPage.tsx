@@ -55,7 +55,7 @@ const AuthPage = () => {
 
   const strength = getStrength(password);
   const isPasswordStrong = !isLogin ? strength === 5 : true;
-  const isEmailValid = !isLogin ? emailRules.every(r => r.test(email)) : email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isEmailValid = !isLogin ? emailRules.every(r => r.test(email)) : email.length > 0 && email.includes("@") && !/\s/.test(email);
 
   // Debounced email validation
   const validateEmail = useCallback(async (email: string) => {
@@ -292,7 +292,7 @@ const AuthPage = () => {
                     {emailError ? (
                       <X className="h-4 w-4 text-destructive" />
                     ) : (
-                      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                      email.length > 0 && email.includes("@") && !/\s/.test(email)
                         ? <Check className="h-4 w-4 text-green-500" />
                         : <X className="h-4 w-4 text-destructive" />
                     )}
