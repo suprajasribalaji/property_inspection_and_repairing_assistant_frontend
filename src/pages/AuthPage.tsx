@@ -165,8 +165,15 @@ const AuthPage = () => {
         toast.success("Account created successfully!");
         navigate("/");
       }
-    } catch (error: any) {
-      setAuthError(error.response?.data?.detail || "Authentication failed. Please check your credentials.");
+    } catch (error: unknown) {
+      let errorMessage = "Authentication failed. Please check your credentials.";
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { detail?: string } } };
+        errorMessage = axiosError.response?.data?.detail || errorMessage;
+      }
+      
+      setAuthError(errorMessage);
     } finally {
       setIsLoading(false);
     }
