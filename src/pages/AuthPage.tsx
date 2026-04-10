@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser, registerUser } from "@/services/api";
 import { toast } from "sonner";
@@ -43,11 +43,94 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const navigate = useNavigate();
+
+  // Debounce refs
+  const emailTimeoutRef = useRef<NodeJS.Timeout>();
+  const usernameTimeoutRef = useRef<NodeJS.Timeout>();
 
   const strength = getStrength(password);
   const isPasswordStrong = !isLogin ? strength === 5 : true;
   const isEmailValid = !isLogin ? emailRules.every(r => r.test(email)) : true;
+
+  // Debounced email validation
+  const validateEmail = useCallback(async (email: string) => {
+    if (emailTimeoutRef.current) {
+      clearTimeout(emailTimeoutRef.current);
+    }
+
+    emailTimeoutRef.current = setTimeout(async () => {
+      if (!email) {
+        setEmailError("");
+        return;
+      }
+
+      if (!emailRules.every(r => r.test(email))) {
+        setEmailError("Please enter a valid email address.");
+        return;
+      }
+
+      // Check if email already exists (only on registration)
+      if (!isLogin && emailRules.every(r => r.test(email))) {
+        try {
+          // Mock API call to check email availability
+          const response = await fetch(`http://localhost:8000/api/auth/check-email?email=${encodeURIComponent(email)}`);
+          const data = await response.json();
+          if (data.exists) {
+            setEmailError(`The email '${email}' is already registered.`);
+          } else {
+            setEmailError("");
+          }
+        } catch (error) {
+          // If API fails, just clear error for valid format
+          setEmailError("");
+        }
+      }
+    }, 500); // 500ms delay
+  }, [isLogin]);
+
+  // Debounced username validation
+  const validateUsername = useCallback(async (username: string) => {
+    if (usernameTimeoutRef.current) {
+      clearTimeout(usernameTimeoutRef.current);
+    }
+
+    usernameTimeoutRef.current = setTimeout(async () => {
+      if (!username) {
+        setUsernameError("");
+        return;
+      }
+
+      if (username.length < 3) {
+        setUsernameError("Username must be at least 3 characters long.");
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        setUsernameError("Username can only contain letters, numbers, and underscores.");
+        return;
+      }
+
+      // Check if username already exists (only on registration)
+      if (!isLogin) {
+        try {
+          // Mock API call to check username availability
+          const response = await fetch(`http://localhost:8000/api/auth/check-username?username=${encodeURIComponent(username)}`);
+          const data = await response.json();
+          if (data.exists) {
+            setUsernameError(`The username '${username}' is already taken.`);
+          } else {
+            setUsernameError("");
+          }
+        } catch (error) {
+          // If API fails, just clear error for valid format
+          setUsernameError("");
+        }
+      }
+    }, 500); // 500ms delay
+  }, [isLogin]);
 
   useEffect(() => {
     if (localStorage.getItem("authToken")) {
@@ -159,28 +242,53 @@ const AuthPage = () => {
           >
             {!isLogin && (
               <div className="space-y-1.5">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Full name" value={name} onChange={e => { setName(e.target.value); setAuthError(""); }} required />
+                <Label htmlFor="name">User Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="username" 
+                  value={name} 
+                  onChange={e => { 
+                    setName(e.target.value); 
+                    setAuthError(""); 
+                    validateUsername(e.target.value);
+                  }} 
+                  required 
+                  className={usernameError ? "border-destructive" : ""}
+                />
+                {usernameError && (
+                  <p className="text-xs text-destructive mt-1">{usernameError}</p>
+                )}
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email ID</Label>
               <div className="relative">
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={e => { setEmail(e.target.value); setAuthError(""); }}
+                  onChange={e => { 
+                    setEmail(e.target.value); 
+                    setAuthError(""); 
+                    validateEmail(e.target.value);
+                  }}
                   required
-                  className={email.length > 0 ? "pr-10" : ""}
+                  className={`${email.length > 0 ? "pr-10" : ""} ${emailError ? "border-destructive" : ""}`}
                 />
                 {email.length > 0 && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    {/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)
-                      ? <Check className="h-4 w-4 text-green-500" />
-                      : <X className="h-4 w-4 text-destructive" />}
+                    {emailError ? (
+                      <X className="h-4 w-4 text-destructive" />
+                    ) : (
+                      /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)
+                        ? <Check className="h-4 w-4 text-green-500" />
+                        : <X className="h-4 w-4 text-destructive" />
+                    )}
                   </span>
+                )}
+                {emailError && (
+                  <p className="text-xs text-destructive mt-1">{emailError}</p>
                 )}
               </div>
             </div>
