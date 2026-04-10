@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Check, X, AlertCircle } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "http://127.0.0.1:8000";
+
 const passwordRules = [
   { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
   { id: "uppercase", label: "One uppercase letter (A-Z)", test: (p: string) => /[A-Z]/.test(p) },
@@ -75,8 +77,8 @@ const AuthPage = () => {
       // Check if email already exists (only on registration)
       if (!isLogin && emailRules.every(r => r.test(email))) {
         try {
-          // Mock API call to check email availability
-          const response = await fetch(`http://localhost:8000/api/auth/check-email?email=${encodeURIComponent(email)}`);
+          // API call to check email availability
+          const response = await fetch(`${API_BASE_URL}/api/auth/check-email?email=${encodeURIComponent(email)}`);
           const data = await response.json();
           if (data.exists) {
             setEmailError(`The email '${email}' is already registered.`);
@@ -116,8 +118,8 @@ const AuthPage = () => {
       // Check if username already exists (only on registration)
       if (!isLogin) {
         try {
-          // Mock API call to check username availability
-          const response = await fetch(`http://localhost:8000/api/auth/check-username?username=${encodeURIComponent(username)}`);
+          // API call to check username availability
+          const response = await fetch(`${API_BASE_URL}/api/auth/check-username?username=${encodeURIComponent(username)}`);
           const data = await response.json();
           if (data.exists) {
             setUsernameError(`The username '${username}' is already taken.`);
