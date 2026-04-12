@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
+
 const SimpleLoader = () => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -11,5 +12,6 @@ const SimpleLoader = () => (
     <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#BC8BC2" }} />
   </motion.div>
 );
+
 
 export default SimpleLoader;

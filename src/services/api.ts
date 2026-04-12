@@ -7,6 +7,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+
 // ── JWT Interceptor ───────────────────────────────────────
 // Automatically attaches token to every request
 api.interceptors.request.use((config) => {
@@ -16,6 +17,7 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
 
 // Auto logout on 401
 api.interceptors.response.use(
@@ -30,6 +32,7 @@ api.interceptors.response.use(
   }
 );
 
+
 // ── Auth Types ────────────────────────────────────────────
 export interface User {
   id: string;
@@ -39,11 +42,13 @@ export interface User {
   created_at: string;
 }
 
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;
   user: User;
 }
+
 
 export interface RegisterRequest {
   email: string;
@@ -51,11 +56,13 @@ export interface RegisterRequest {
   password: string;
 }
 
+
 // ── Auth Functions ────────────────────────────────────────
 export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
   const response = await api.post<AuthResponse>("/auth/register", data);
   return response.data;
 };
+
 
 export const login = async (email: string, password: string): Promise<AuthResponse> => {
   // Backend uses OAuth2PasswordRequestForm — needs form data, not JSON
@@ -69,20 +76,24 @@ export const login = async (email: string, password: string): Promise<AuthRespon
   return response.data;
 };
 
+
 export const getMe = async (): Promise<User> => {
   const response = await api.get<User>("/auth/me");
   return response.data;
 };
+
 
 export const checkEmailExists = async (email: string): Promise<boolean> => {
   const response = await api.get<{ exists: boolean }>(`/auth/check-email?email=${encodeURIComponent(email)}`);
   return response.data.exists;
 };
 
+
 export const checkUsernameExists = async (username: string): Promise<boolean> => {
   const response = await api.get<{ exists: boolean }>(`/auth/check-username?username=${encodeURIComponent(username)}`);
   return response.data.exists;
 };
+
 
 export const logout = () => {
   localStorage.removeItem("access_token");
@@ -90,11 +101,12 @@ export const logout = () => {
   window.location.href = "/";
 };
 
-// ── Existing Types (unchanged) ────────────────────────────
+
 export interface InspectionItem {
   question: string;
   answer: string;
 }
+
 
 export interface InspectionStorageInfo {
   storage_path: string;
@@ -102,10 +114,12 @@ export interface InspectionStorageInfo {
   content_type: string;
 }
 
+
 export interface InspectResponse {
   results: InspectionItem[];
   storage: InspectionStorageInfo | null;
 }
+
 
 export interface BackendResponse {
   session_id: string;
@@ -113,14 +127,17 @@ export interface BackendResponse {
   storage: InspectionStorageInfo | null;
 }
 
+
 export interface ChatResponse {
   answer: string;
 }
+
 
 export interface Session {
   id: string;
   created_at: string;
 }
+
 
 export interface SessionHistory {
   session: Session;
@@ -149,16 +166,18 @@ export interface SessionHistory {
   }>;
 }
 
-// ── Existing API Functions (unchanged) ───────────────────
+
 export const createSession = async (): Promise<Session> => {
   const response = await api.post<Session>("/api/sessions");
   return response.data;
 };
 
+
 export const getSessionHistory = async (sessionId: string): Promise<SessionHistory> => {
   const response = await api.get<SessionHistory>(`/api/sessions/${sessionId}`);
   return response.data;
 };
+
 
 export const getLatestSessionByDateHour = async (): Promise<Session | null> => {
   try {
@@ -169,6 +188,7 @@ export const getLatestSessionByDateHour = async (): Promise<Session | null> => {
   }
 };
 
+
 export const getLatestSessionWithResults = async (): Promise<Session | null> => {
   try {
     const response = await api.get<Session>("/api/sessions/latest-with-results");
@@ -178,10 +198,12 @@ export const getLatestSessionWithResults = async (): Promise<Session | null> => 
   }
 };
 
+
 export const getAllSessions = async (): Promise<{ sessions: Session[] }> => {
   const response = await api.get<{ sessions: Session[] }>("/api/sessions");
   return response.data;
 };
+
 
 export const inspectImage = async (
   images: File[],                                    // ← array
@@ -206,9 +228,12 @@ export const inspectImage = async (
     session_id: response.data.session_id,
   };
 };
+
+
 export const sendChatMessage = async (question: string): Promise<ChatResponse> => {
   const response = await api.post<ChatResponse>("/chat", { question });
   return response.data;
 };
+
 
 export default api;

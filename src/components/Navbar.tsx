@@ -4,20 +4,24 @@ import { Camera, FileText, Bot, LogOut, UserCircle2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { logout } from "@/services/api";
 
+
 const Navbar = () => {
   const { isAnalyzed, user, setUser } = useInspection();
   const navigate = useNavigate();
   const location = useLocation();
+
 
   const navItems = [
     { label: "Image Analysis", icon: Camera, path: "/home", always: true },
     { label: "Inspection Report", icon: FileText, path: "/home/inspection_report", always: false },
   ];
 
+
   const handleLogout = () => {
     setUser(null);
     logout();
   };
+
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border bg-card/80 backdrop-blur-xl">
@@ -92,5 +96,6 @@ const Navbar = () => {
     </nav>
   );
 };
+
 
 export default Navbar;

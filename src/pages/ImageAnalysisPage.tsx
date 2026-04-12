@@ -9,6 +9,7 @@ import SimpleLoader from "@/components/SimpleLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { Scan } from "lucide-react";
 
+
 const ImageAnalysisPage = () => {
   const {
     uploadedFiles,
@@ -22,14 +23,17 @@ const ImageAnalysisPage = () => {
     setSessionHistory,
   } = useInspection();
 
+  
   const { sessionId, loading: sessionLoading, createNewSession } = useSession();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
+  
   useEffect(() => {
     if (sessionId) setSessionId(sessionId);
   }, [sessionId, setSessionId]);
+
 
   const handleFilesSelect = (newFiles: File[]) => {
     // Merge with existing, avoid duplicates by name+size
@@ -47,12 +51,14 @@ const ImageAnalysisPage = () => {
     setUploadedImages(mergedPreviews);
   };
 
+
   const handleRemove = (index: number) => {
     const newFiles = uploadedFiles.filter((_, i) => i !== index);
     const newPreviews = uploadedImages.filter((_, i) => i !== index);
     setUploadedFiles(newFiles);
     setUploadedImages(newPreviews);
   };
+
 
   const handleAnalyze = async () => {
     if (!uploadedFiles.length) return;
@@ -101,6 +107,7 @@ const ImageAnalysisPage = () => {
     }
   };
 
+
   return (
     <>
       <AnimatePresence>
@@ -143,5 +150,6 @@ const ImageAnalysisPage = () => {
     </>
   );
 };
+
 
 export default ImageAnalysisPage;

@@ -3,6 +3,7 @@ import { useInspection } from "@/context/InspectionContext";
 import { Search, Download, ChevronDown, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+
 const InspectionResults = () => {
   const { results } = useInspection();
   const [search, setSearch] = useState("");
@@ -33,6 +34,7 @@ const InspectionResults = () => {
     });
   };
 
+
   const handleDownload = () => {
     const text = validResults.map((r) => `${r.question}\nAnswer: ${r.answer}`).join("\n\n");
     const blob = new Blob([text], { type: "text/plain" });
@@ -43,6 +45,7 @@ const InspectionResults = () => {
     a.click();
     URL.revokeObjectURL(url);
   };
+
 
   return (
     <div className="flex h-full flex-col">
@@ -106,5 +109,6 @@ const InspectionResults = () => {
     </div>
   );
 };
+
 
 export default InspectionResults;

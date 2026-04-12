@@ -15,7 +15,7 @@ const ChatPage = () => {
   
   const { 
     setResults, 
-    setUploadedImage, 
+    setUploadedImages, 
     setIsAnalyzed, 
     setSessionId: setContextSessionId,
     setSessionHistory,

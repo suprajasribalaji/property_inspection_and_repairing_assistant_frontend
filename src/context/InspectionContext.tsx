@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { InspectionItem, InspectionStorageInfo, SessionHistory, User } from "@/services/api";
 
+
 interface InspectionState {
   // Auth
   user: User | null;
@@ -24,7 +25,9 @@ interface InspectionState {
   setSessionHistory: (history: SessionHistory | null) => void;
 }
 
+
 const InspectionContext = createContext<InspectionState | null>(null);
+
 
 export const InspectionProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(() => {
@@ -32,11 +35,13 @@ export const InspectionProvider = ({ children }: { children: ReactNode }) => {
     return stored ? JSON.parse(stored) : null;
   });
 
+
   const setUser = (newUser: User | null) => {
     setUserState(newUser);
     if (newUser) localStorage.setItem("user", JSON.stringify(newUser));
     else localStorage.removeItem("user");
   };
+
 
   const [isAnalyzed, setIsAnalyzed] = useState(false);
   const [results, setResults] = useState<InspectionItem[]>([]);
@@ -45,6 +50,7 @@ export const InspectionProvider = ({ children }: { children: ReactNode }) => {
   const [inspectionStorage, setInspectionStorage] = useState<InspectionStorageInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionHistory, setSessionHistory] = useState<SessionHistory | null>(null);
+
 
   return (
     <InspectionContext.Provider
@@ -72,6 +78,7 @@ export const InspectionProvider = ({ children }: { children: ReactNode }) => {
     </InspectionContext.Provider>
   );
 };
+
 
 export const useInspection = () => {
   const ctx = useContext(InspectionContext);

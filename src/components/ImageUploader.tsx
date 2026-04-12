@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { Upload, X, Image as ImageIcon, PlusCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+
 interface ImageUploaderProps {
   files: File[];
   previews: string[];
@@ -9,10 +10,13 @@ interface ImageUploaderProps {
   onRemove: (index: number) => void;
 }
 
+
 const MAX_IMAGES = 10;
+
 
 const ImageUploader = ({ files, previews, onFilesSelect, onRemove }: ImageUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -25,6 +29,7 @@ const ImageUploader = ({ files, previews, onFilesSelect, onRemove }: ImageUpload
     [onFilesSelect]
   );
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []).filter((f) =>
       f.type.startsWith("image/")
@@ -34,8 +39,10 @@ const ImageUploader = ({ files, previews, onFilesSelect, onRemove }: ImageUpload
     e.target.value = "";
   };
 
+
   const hasFiles = files.length > 0;
   const canAddMore = files.length < MAX_IMAGES;
+
 
   return (
     <div className="w-full">
@@ -141,5 +148,6 @@ const ImageUploader = ({ files, previews, onFilesSelect, onRemove }: ImageUpload
     </div>
   );
 };
+
 
 export default ImageUploader;
