@@ -15,7 +15,7 @@ const ChatPage = () => {
   
   const { 
     setResults, 
-    setUploadedImage, 
+    setUploadedImages, 
     setIsAnalyzed, 
     setSessionId: setContextSessionId,
     setSessionHistory,
@@ -23,7 +23,7 @@ const ChatPage = () => {
     isAnalyzed
   } = useInspection();
 
-  const [leftPanelWidth, setLeftPanelWidth] = useState(65); // percentage
+  const [leftPanelWidth, setLeftPanelWidth] = useState(60); // percentage
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const restoredForSessionIdRef = useRef<string | null>(null);
@@ -31,9 +31,9 @@ const ChatPage = () => {
 
   // Panel constraints
   const LEFT_PANEL_MIN = 30; // 30% minimum
-  const LEFT_PANEL_MAX = 90; // 90% maximum (allows chat to shrink to 10%)
-  const RIGHT_PANEL_MIN = 10; // 10% minimum
-  const RIGHT_PANEL_MAX = 70; // 70% maximum (when left panel is at 30%)
+  const LEFT_PANEL_MAX = 50; // 90% maximum (allows chat to shrink to 10%)
+  const RIGHT_PANEL_MIN = 30; // 10% minimum
+  const RIGHT_PANEL_MAX = 50; // 70% maximum (when left panel is at 30%)
 
   // Fetch latest session with results from DB and restore context from it
   useEffect(() => {
@@ -72,7 +72,7 @@ const ChatPage = () => {
             const latestImage = latestHistory.images?.[0];
             if (latestImage?.image_url) {
               console.log('Restoring image from latest session:', latestImage.image_url);
-              setUploadedImage(latestImage.image_url);
+              setUploadedImages([latestImage.image_url]);
             }
 
             // Restore finished; allow the UI to render.
@@ -99,7 +99,7 @@ const ChatPage = () => {
 
             const latestImage = currentHistory.images?.[0];
             if (latestImage?.image_url) {
-              setUploadedImage(latestImage.image_url);
+              setUploadedImages([latestImage.image_url]);
             }
 
             // Restore finished; allow the UI to render.
@@ -122,7 +122,7 @@ const ChatPage = () => {
       restoredForSessionIdRef.current = sessionId;
       restoreFromLatestSessionWithResults();
     }
-  }, [sessionLoading, sessionId]);
+  }, [sessionLoading, sessionId, setContextSessionId, setIsAnalyzed, setResults, setSessionHistory, setUploadedImages]);
 
   // Handle mouse move for resizing
   useEffect(() => {
