@@ -12,16 +12,6 @@ const LoadingOverlay = () => (
     <p className="mt-6 max-w-sm text-center font-display text-lg font-semibold text-foreground">
       AI is analyzing your image and answering inspection questions...
     </p>
-    <div className="mt-4 flex gap-1">
-      {[0, 1, 2].map((i) => (
-        <motion.div
-          key={i}
-          className="h-2 w-2 rounded-full bg-primary"
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-        />
-      ))}
-    </div>
   </motion.div>
 );
 
