@@ -57,7 +57,7 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
           extra={
             <Button
               type="primary"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
               className="border-0 h-12 px-8 text-base font-semibold shadow-elevated hover:shadow-lg transition-all duration-200"
               style={{
                 background: '#6E5B9A',

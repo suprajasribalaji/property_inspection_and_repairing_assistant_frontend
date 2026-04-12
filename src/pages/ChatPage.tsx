@@ -167,17 +167,6 @@ const ChatPage = () => {
     return <SimpleLoader />;
   }
 
-  // Extra guard: don't render the chat UI until results are actually in context.
-  // This prevents a brief "blank" period during state restoration.
-  if (sessionId && !isAnalyzed && (!results || results.length === 0)) {
-    return <SimpleLoader />;
-  }
-
-  // Show loading if session history is still loading but we have a session ID
-  if (sessionId && !sessionHistory) {
-    return <SimpleLoader />;
-  }
-
   return (
     <div className="flex h-screen pt-16" ref={containerRef}>
       {/* Left side: PDF Preview */}

@@ -10,7 +10,7 @@ const ServerErrorPage = () => {
       status="500"
       title="500"
       subTitle="Sorry, something went wrong."
-      extra={<Button type="primary" onClick={() => navigate('/')}>Back Home</Button>}
+      extra={<Button type="primary" onClick={() => navigate('/home')}>Back Home</Button>}
     />
   );
 };

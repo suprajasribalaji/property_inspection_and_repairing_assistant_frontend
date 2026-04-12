@@ -11,96 +11,81 @@ import { Scan } from "lucide-react";
 
 const ImageAnalysisPage = () => {
   const {
-    uploadedFile,
-    uploadedImage,
-    setUploadedFile,
-    setUploadedImage,
+    uploadedFiles,
+    uploadedImages,
+    setUploadedFiles,
+    setUploadedImages,
     setResults,
     setInspectionStorage,
     setIsAnalyzed,
     setSessionId,
     setSessionHistory,
   } = useInspection();
-  
+
   const { sessionId, loading: sessionLoading, createNewSession } = useSession();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Update context with session ID when it changes
   useEffect(() => {
-    if (sessionId) {
-      setSessionId(sessionId);
-    }
+    if (sessionId) setSessionId(sessionId);
   }, [sessionId, setSessionId]);
 
-  // Check if we should preserve the image when coming back from error page
-  useEffect(() => {
-    if (location.state?.preserveImage && uploadedFile) {
-      console.log('Preserving uploaded image after error');
-    }
-  }, [location.state, uploadedFile]);
-
-  const handleFileSelect = (file: File) => {
-    setUploadedFile(file);
-    setUploadedImage(URL.createObjectURL(file));
+  const handleFilesSelect = (newFiles: File[]) => {
+    // Merge with existing, avoid duplicates by name+size
+    const existing = new Set(uploadedFiles.map((f) => `${f.name}-${f.size}`));
+    const toAdd = newFiles.filter((f) => !existing.has(`${f.name}-${f.size}`));
+    const merged = [...uploadedFiles, ...toAdd].slice(0, 10); // max 10
+    const mergedPreviews = merged.map((f) => {
+      // Reuse existing preview URL if file already uploaded
+      const idx = uploadedFiles.findIndex(
+        (ef) => ef.name === f.name && ef.size === f.size
+      );
+      return idx !== -1 ? uploadedImages[idx] : URL.createObjectURL(f);
+    });
+    setUploadedFiles(merged);
+    setUploadedImages(mergedPreviews);
   };
 
-  const handleRemove = () => {
-    setUploadedFile(null);
-    setUploadedImage(null);
+  const handleRemove = (index: number) => {
+    const newFiles = uploadedFiles.filter((_, i) => i !== index);
+    const newPreviews = uploadedImages.filter((_, i) => i !== index);
+    setUploadedFiles(newFiles);
+    setUploadedImages(newPreviews);
   };
 
   const handleAnalyze = async () => {
-    if (!uploadedFile) return;
+    if (!uploadedFiles.length) return;
 
     setLoading(true);
     try {
-      // Clear out previous context state so UI doesn't hold onto old data
       setResults([]);
       setSessionHistory(null);
-      
-      // Always create a new session for a new analysis to prevent appending to the old session's report and chat
+
       const newSession = await createNewSession();
       const activeSessionId = newSession.id;
       setSessionId(newSession.id);
 
-      console.log('Starting analysis with session:', activeSessionId);
-      const data = await inspectImage(uploadedFile, activeSessionId);
-      console.log('Data:', data);
-      
-      // Check if results are valid before proceeding
-      const invalidAnswers = new Set([
-        "not visible in the image",
-        "no answer available",
-      ]);
-      const hasUsefulResults = data.results && data.results.length > 0 &&
-        data.results.some((r: any) => !invalidAnswers.has((r.answer || "").trim().toLowerCase()));
+      const data = await inspectImage(uploadedFiles, activeSessionId); // ← pass array
 
-      if (!hasUsefulResults) {
-        console.log('No useful results from analysis, navigating to error page');
-        navigate("/error", { 
-          state: { 
-            errorMessage: "The AI could not find any visible inspection findings in this image. Please upload a clearer or more detailed property photo.",
-            errorCode: 422,
-            preserveImage: true
-          } 
+      if (!data.results || data.results.length === 0) {
+        navigate("/error", {
+          state: {
+            error: "No inspection results found. The analysis returned empty results.",
+            preserveImage: true,
+          },
         });
         return;
       }
-      
-      console.log('Analysis successful, setting results:', data.results);
+
       setResults(data.results);
       setInspectionStorage(data.storage);
-      console.log('Setting isAnalyzed to true');
       setIsAnalyzed(true);
-      console.log('Navigating to chat page...');
-      navigate("/inspection_report");
-    } catch (error: any) {
-      console.error('Analysis failed:', error);
+      navigate("/home/inspection_report");
+    } catch (error) {
       let errorMessage = "Analysis failed. Please try again.";
       let errorCode = 500;
-      
+
       if (error.isAxiosError && error.response) {
         errorCode = error.response.status;
         errorMessage = error.response.data?.detail || error.message;
@@ -108,12 +93,8 @@ const ImageAnalysisPage = () => {
         errorMessage = error.message;
       }
 
-      navigate("/error", { 
-        state: { 
-          errorMessage,
-          errorCode,
-          preserveImage: true
-        } 
+      navigate("/error", {
+        state: { errorMessage, errorCode, preserveImage: true },
       });
     } finally {
       setLoading(false);
@@ -136,19 +117,26 @@ const ImageAnalysisPage = () => {
             House Inspection{" "}
             <span className="text-[#9169C1]">Assistant</span>
           </h1>
-          <p className="mx-auto mb-8 max-w-md text-xm text-[#42326E]">
-            Upload a photo of your property and let AI analyze it across 100 inspection criteria instantly.
+          <p className="mx-auto mb-8 max-w-md text-sm text-[#42326E]">
+            Upload up to 10 photos of your property and let AI analyze them across 100 inspection criteria instantly.
           </p>
-          <ImageUploader file={uploadedFile} preview={uploadedImage} onFileSelect={handleFileSelect} onRemove={handleRemove} />
+
+          <ImageUploader
+            files={uploadedFiles}
+            previews={uploadedImages}
+            onFilesSelect={handleFilesSelect}
+            onRemove={handleRemove}
+          />
+
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyze}
-            disabled={!uploadedFile || loading || sessionLoading}
+            disabled={!uploadedFiles.length || loading || sessionLoading}
             className="mt-8 inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-3 text-sm font-semibold text-primary-foreground shadow-elevated transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scan className="h-4 w-4" />
-            Analyze Image
+            Analyze {uploadedFiles.length > 1 ? `${uploadedFiles.length} Images` : "Image"}
           </motion.button>
         </motion.div>
       </div>
