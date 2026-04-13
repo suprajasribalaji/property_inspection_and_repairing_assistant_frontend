@@ -2,42 +2,83 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STAGES = [
-  { message: "Uploading your images securely...", icon: "⬆" },
-  { message: "Scanning for visible defects and damage...", icon: "🔍" },
-  { message: "Identifying structural issues...", icon: "🏠" },
-  { message: "Checking plumbing and water systems...", icon: "💧" },
-  { message: "Inspecting electrical indicators...", icon: "⚡" },
-  { message: "Analyzing walls, ceilings and floors...", icon: "📋" },
-  { message: "Cross-referencing 100 inspection criteria...", icon: "✅" },
-  { message: "Generating your inspection report...", icon: "📄" },
-  { message: "Almost done, finalizing results...", icon: "⏳" },
+  "Uploading your images securely...",
+  "Scanning for visible defects and damage...",
+  "Identifying structural issues...",
+  "Checking plumbing and water systems...",
+  "Inspecting electrical indicators...",
+  "Analyzing walls, ceilings and floors...",
+  "Cross-referencing 100 inspection criteria...",
+  "Generating your inspection report...",
+  "Compiling all findings together...",
+  "Structuring the report sections...",
+  "Almost there, wrapping up...",
+  "Still working, this can take a moment...",
+  "Hang tight, finalizing your results...",
+  "Processing the last few details...",
+  "Just a little longer...",
+];
+
+const TIPS = [
+  "More images = more thorough inspection.",
+  "Each image is analyzed across 100 criteria.",
+  "Complex defects take longer to classify.",
+  "Your report will be ready any moment now.",
+  "AI is carefully reviewing all findings.",
 ];
 
 const LoadingOverlay = () => {
   const [stageIndex, setStageIndex] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    // Advance stage every 4 seconds
-    const stageTimer = setInterval(() => {
-      setStageIndex((prev) => Math.min(prev + 1, STAGES.length - 1));
-    }, 4000);
-
-    // Smooth progress bar — fills to ~90% over 36 seconds, never completes on its own
+    // Progress bar — fills to 98% over ~90 seconds, never fully completes
     const progressTimer = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) return prev;
-        return prev + 0.4;
+        if (prev < 70) return prev + 0.6;       // fast at start
+        if (prev < 88) return prev + 0.25;      // slows down
+        if (prev < 95) return prev + 0.08;      // very slow near end
+        if (prev < 98) return prev + 0.02;      // crawls at 95%+
+        return prev;
       });
     }, 150);
 
+    // Elapsed seconds counter
+    const elapsedTimer = setInterval(() => {
+      setElapsed((prev) => prev + 1);
+    }, 1000);
+
     return () => {
-      clearInterval(stageTimer);
       clearInterval(progressTimer);
+      clearInterval(elapsedTimer);
     };
   }, []);
 
-  const current = STAGES[stageIndex];
+  // Stage messages — cycle through all stages, then keep rotating last few
+  useEffect(() => {
+    const interval = stageIndex < 7 ? 4000 : 5000; // slower rotation in later stages
+    const timer = setTimeout(() => {
+      setStageIndex((prev) =>
+        prev < STAGES.length - 1 ? prev + 1 : 7 // loop back to stage 7 after last
+      );
+    }, interval);
+    return () => clearTimeout(timer);
+  }, [stageIndex]);
+
+  // Tip rotation — changes every 8 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % TIPS.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatElapsed = (s: number) => {
+    if (s < 60) return `${s}s`;
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
+  };
 
   return (
     <motion.div
@@ -46,10 +87,9 @@ const LoadingOverlay = () => {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/90 backdrop-blur-md px-6"
     >
-      {/* Spinning ring */}
+      {/* Progress ring */}
       <div className="relative mb-8 h-20 w-20">
         <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
-          {/* Track */}
           <circle
             cx="40" cy="40" r="34"
             fill="none"
@@ -57,7 +97,6 @@ const LoadingOverlay = () => {
             strokeWidth="4"
             className="text-muted/20"
           />
-          {/* Progress arc */}
           <circle
             cx="40" cy="40" r="34"
             fill="none"
@@ -66,10 +105,9 @@ const LoadingOverlay = () => {
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 34}`}
             strokeDashoffset={`${2 * Math.PI * 34 * (1 - progress / 100)}`}
-            style={{ transition: "stroke-dashoffset 0.3s ease" }}
+            style={{ transition: "stroke-dashoffset 0.4s ease" }}
           />
         </svg>
-        {/* Percentage */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-sm font-semibold" style={{ color: "#BC8BC2" }}>
             {Math.round(progress)}%
@@ -78,36 +116,45 @@ const LoadingOverlay = () => {
       </div>
 
       {/* Stage message */}
-      <div className="h-16 flex flex-col items-center justify-center">
+      <div className="h-8 flex items-center justify-center mb-1">
         <AnimatePresence mode="wait">
-          <motion.div
+          <motion.p
             key={stageIndex}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col items-center gap-2"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="text-center font-display text-lg font-semibold text-foreground"
           >
-            <p className="text-center font-display text-lg font-semibold text-foreground">
-              {current.message}
-            </p>
-          </motion.div>
+            {STAGES[stageIndex]}
+          </motion.p>
         </AnimatePresence>
       </div>
 
+      {/* Elapsed time — only show after 10 seconds */}
+      {elapsed >= 10 && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-4 text-xs text-muted-foreground"
+        >
+          Running for {formatElapsed(elapsed)}
+        </motion.p>
+      )}
+
       {/* Stage dots */}
-      <div className="mt-6 flex items-center gap-1.5">
-        {STAGES.map((_, i) => (
+      <div className="mt-4 flex items-center gap-1.5">
+        {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
             className="rounded-full transition-all duration-300"
             style={{
-              width: i === stageIndex ? "20px" : "6px",
+              width: i === Math.min(stageIndex, 7) ? "20px" : "6px",
               height: "6px",
               backgroundColor:
-                i < stageIndex
+                i < Math.min(stageIndex, 7)
                   ? "#BC8BC2"
-                  : i === stageIndex
+                  : i === Math.min(stageIndex, 7)
                   ? "#9169C1"
                   : "var(--color-border-tertiary)",
             }}
@@ -115,10 +162,21 @@ const LoadingOverlay = () => {
         ))}
       </div>
 
-      {/* Subtle tip */}
-      <p className="mt-8 text-xs text-muted-foreground text-center max-w-xs">
-        More images = more thorough inspection. This may take up to 60 seconds.
-      </p>
+      {/* Rotating tip */}
+      <div className="mt-6 h-8 flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={tipIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-xs text-muted-foreground text-center max-w-xs"
+          >
+            {TIPS[tipIndex]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 };
