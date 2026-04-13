@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useInspection } from "@/context/InspectionContext";
 import { login, register, checkEmailExists, checkUsernameExists } from "@/services/api";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────
 type FieldStatus = "idle" | "checking" | "available" | "taken";
@@ -28,10 +28,10 @@ const getPasswordStrength = (pwd: string): PasswordStrength => {
 };
 
 const passwordRules = (pwd: string) => [
-  { label: "At least 8 characters",         met: pwd.length >= 8 },
-  { label: "At least one uppercase letter",  met: /[A-Z]/.test(pwd) },
-  { label: "At least one number",            met: /[0-9]/.test(pwd) },
-  { label: "At least one special character", met: /[^A-Za-z0-9]/.test(pwd) },
+  { label: "At least 8 characters",          met: pwd.length >= 8 },
+  { label: "At least one uppercase letter",   met: /[A-Z]/.test(pwd) },
+  { label: "At least one number",             met: /[0-9]/.test(pwd) },
+  { label: "At least one special character",  met: /[^A-Za-z0-9]/.test(pwd) },
 ];
 
 // ── Email format checker ──────────────────────────────────
@@ -60,12 +60,9 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Uniqueness check state
+  const [showPassword, setShowPassword] = useState(false);
   const [emailStatus, setEmailStatus] = useState<FieldStatus>("idle");
   const [usernameStatus, setUsernameStatus] = useState<FieldStatus>("idle");
-
-  // Password strength state
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>("empty");
 
   const emailTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,47 +71,37 @@ const Index = () => {
   const { setUser } = useInspection();
   const navigate = useNavigate();
 
-  // ── Debounced email uniqueness check ─────────────────
+  // ── Debounced email check ─────────────────────────────
   useEffect(() => {
     if (isLogin) return;
-    if (!email || !isValidEmailFormat(email)) {
-      setEmailStatus("idle");
-      return;
-    }
+    if (!email || !isValidEmailFormat(email)) { setEmailStatus("idle"); return; }
     setEmailStatus("checking");
     if (emailTimerRef.current) clearTimeout(emailTimerRef.current);
     emailTimerRef.current = setTimeout(async () => {
       try {
         const exists = await checkEmailExists(email);
         setEmailStatus(exists ? "taken" : "available");
-      } catch {
-        setEmailStatus("idle");
-      }
+      } catch { setEmailStatus("idle"); }
     }, 600);
     return () => { if (emailTimerRef.current) clearTimeout(emailTimerRef.current); };
   }, [email, isLogin]);
 
-  // ── Debounced username uniqueness check ──────────────
+  // ── Debounced username check ──────────────────────────
   useEffect(() => {
     if (isLogin) return;
-    if (!username || username.length < 3) {
-      setUsernameStatus("idle");
-      return;
-    }
+    if (!username || username.length < 3) { setUsernameStatus("idle"); return; }
     setUsernameStatus("checking");
     if (usernameTimerRef.current) clearTimeout(usernameTimerRef.current);
     usernameTimerRef.current = setTimeout(async () => {
       try {
         const exists = await checkUsernameExists(username);
         setUsernameStatus(exists ? "taken" : "available");
-      } catch {
-        setUsernameStatus("idle");
-      }
+      } catch { setUsernameStatus("idle"); }
     }, 600);
     return () => { if (usernameTimerRef.current) clearTimeout(usernameTimerRef.current); };
   }, [username, isLogin]);
 
-  // ── Reset everything when toggling forms ─────────────
+  // ── Toggle form ───────────────────────────────────────
   const handleToggle = () => {
     setIsLogin((v) => !v);
     setError("");
@@ -124,6 +111,7 @@ const Index = () => {
     setUsername("");
     setPassword("");
     setPasswordStrength("empty");
+    setShowPassword(false);
   };
 
   // ── Submit ────────────────────────────────────────────
@@ -132,82 +120,54 @@ const Index = () => {
     setError("");
 
     if (!isLogin) {
-      if (!isValidEmailFormat(email)) {
-        setError("Please enter a valid email address.");
-        return;
-      }
-      if (emailStatus === "taken") {
-        setError("This email is already registered.");
-        return;
-      }
-      if (usernameStatus === "taken") {
-        setError("This username is already taken.");
-        return;
-      }
-      if (username.length < 3) {
-        setError("Username must be at least 3 characters.");
-        return;
-      }
-      if (passwordStrength === "weak") {
-        setError("Please choose a stronger password.");
-        return;
-      }
+      if (!isValidEmailFormat(email)) { setError("Please enter a valid email address."); return; }
+      if (emailStatus === "taken")    { setError("This email is already registered."); return; }
+      if (usernameStatus === "taken") { setError("This username is already taken."); return; }
+      if (username.length < 3)        { setError("Username must be at least 3 characters."); return; }
+      if (passwordStrength === "weak"){ setError("Please choose a stronger password."); return; }
     }
 
     setLoading(true);
     try {
-      let response;
-      if (isLogin) {
-        response = await login(email, password);
-      } else {
-        response = await register({ email, username, password });
-      }
+      const response = isLogin
+        ? await login(email, password)
+        : await register({ email, username, password });
       localStorage.setItem("access_token", response.access_token);
       setUser(response.user);
       navigate("/home");
     } catch (err) {
       const detail = err.response?.data?.detail;
-      if (Array.isArray(detail)) {
-        setError(detail[0]?.msg || "Something went wrong");
-      } else {
-        setError(detail || "Something went wrong. Please try again.");
-      }
+      setError(Array.isArray(detail) ? detail[0]?.msg : detail || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Strength bar color ────────────────────────────────
+  // ── Strength helpers ──────────────────────────────────
   const strengthColor =
     passwordStrength === "weak"   ? "#ef4444" :
     passwordStrength === "fair"   ? "#f59e0b" :
     passwordStrength === "strong" ? "#22c55e" :
     "var(--color-border-tertiary)";
 
-  const strengthBarFill = (barIndex: number) => {
-    if (passwordStrength === "empty") return "var(--color-border-tertiary)";
-    if (passwordStrength === "weak"   && barIndex === 0) return "#ef4444";
-    if (passwordStrength === "fair"   && barIndex <= 1)  return "#f59e0b";
-    if (passwordStrength === "strong")                   return "#22c55e";
+  const strengthBarFill = (i: number) => {
+    if (passwordStrength === "empty")               return "var(--color-border-tertiary)";
+    if (passwordStrength === "weak"   && i === 0)   return "#ef4444";
+    if (passwordStrength === "fair"   && i <= 1)    return "#f59e0b";
+    if (passwordStrength === "strong")              return "#22c55e";
     return "var(--color-border-tertiary)";
   };
 
   return (
     <div className="flex min-h-screen">
 
-      {/* ── Left Hero ── */}
-      <div className="relative hidden lg:block lg:w-[54%] xl:w-[54%] 2xl:w-[54%] flex-shrink-0">
-        <div className="absolute inset-0 overflow-hidden">
-          <img
-            src={heroImage}
-            alt="Property inspector at work"
-            className="h-full w-full object-cover object-center"
-            style={{ 
-              minHeight: '100vh',
-              objectPosition: 'center',
-            }}
-          />
-        </div>
+      {/* ── Left Hero ────────────────────────────────── */}
+      <div className="relative hidden w-[54%] lg:block flex-shrink-0">
+        <img
+          src={heroImage}
+          alt="Property inspector at work"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
         <div className="absolute inset-0 bg-foreground/60" />
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-16 text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.3em] text-primary">
@@ -226,8 +186,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Right Form */}
-      <div className="flex flex-col bg-card px-8 py-12 lg:w-[46%] lg:px-14 lg:flex-initial overflow-y-auto" style={{ height: '100vh' }}>
+      {/* ── Right Form ───────────────────────────────── */}
+      <div className="flex w-full flex-col bg-card px-8 py-12 lg:w-[46%] lg:px-14 overflow-y-auto">
         <div className="mx-auto w-full max-w-sm flex-1 flex flex-col justify-center">
 
           <h2 className="mb-1 text-2xl font-bold text-card-foreground">
@@ -239,14 +199,14 @@ const Index = () => {
 
           {/* Error banner */}
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-200">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
 
-            {/* Username — signup only */}
+            {/* ── Username ── */}
             {!isLogin && (
               <div className="space-y-1.5">
                 <Label htmlFor="username">Username</Label>
@@ -258,11 +218,11 @@ const Index = () => {
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     className={
-                      usernameStatus === "taken"     ? "border-red-400 pr-8" :
-                      usernameStatus === "available" ? "border-green-400 pr-8" : "pr-8"
+                      usernameStatus === "taken"     ? "border-red-400 pr-9" :
+                      usernameStatus === "available" ? "border-green-400 pr-9" : "pr-9"
                     }
                   />
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <FieldIcon status={usernameStatus} />
                   </div>
                 </div>
@@ -270,7 +230,7 @@ const Index = () => {
               </div>
             )}
 
-            {/* Email */}
+            {/* ── Email ── */}
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -282,45 +242,55 @@ const Index = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className={
-                    !isLogin && emailStatus === "taken"     ? "border-red-400 pr-8" :
-                    !isLogin && emailStatus === "available" ? "border-green-400 pr-8" : "pr-8"
+                    !isLogin && emailStatus === "taken"     ? "border-red-400 pr-9" :
+                    !isLogin && emailStatus === "available" ? "border-green-400 pr-9" : "pr-9"
                   }
                 />
                 {!isLogin && (
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <FieldIcon status={emailStatus} />
                   </div>
                 )}
               </div>
-              {/* Format check */}
               {!isLogin && email && !isValidEmailFormat(email) && (
                 <p className="mt-1 text-xs text-red-500">Please enter a valid email address</p>
               )}
-              {/* Uniqueness check */}
               {!isLogin && isValidEmailFormat(email) &&
                 fieldMessage(emailStatus, "Email already registered", "Email is available ✓")}
             </div>
 
-            {/* Password */}
+            {/* ── Password ── */}
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Pwd@#123"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setPasswordStrength(getPasswordStrength(e.target.value));
-                }}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Pwd@#123"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordStrength(getPasswordStrength(e.target.value));
+                  }}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                >
+                  {showPassword
+                    ? <EyeOff className="h-4 w-4" />
+                    : <Eye className="h-4 w-4" />
+                  }
+                </button>
+              </div>
 
-              {/* Password strength — signup only */}
+              {/* Strength — signup only */}
               {!isLogin && password && (
                 <div className="mt-2 space-y-2">
-
-                  {/* Strength bar */}
+                  {/* Bar */}
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
                       <div
@@ -330,15 +300,13 @@ const Index = () => {
                       />
                     ))}
                   </div>
-
-                  {/* Strength label */}
+                  {/* Label */}
                   <p className="text-xs font-medium" style={{ color: strengthColor }}>
                     {passwordStrength === "weak"   && "Weak password"}
                     {passwordStrength === "fair"   && "Fair password"}
                     {passwordStrength === "strong" && "Strong password ✓"}
                   </p>
-
-                  {/* Rules checklist */}
+                  {/* Rules */}
                   <ul className="space-y-1">
                     {passwordRules(password).map((rule) => (
                       <li key={rule.label} className="flex items-center gap-1.5 text-xs">
@@ -355,7 +323,7 @@ const Index = () => {
               )}
             </div>
 
-            {/* Submit */}
+            {/* ── Submit ── */}
             <Button
               type="submit"
               className="w-full"
@@ -376,12 +344,12 @@ const Index = () => {
             </Button>
           </form>
 
-          {/* Toggle */}
+          {/* ── Toggle ── */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
               onClick={handleToggle}
-              className="font-medium text-primary-foreground underline-offset-2 hover:underline"
+              className="font-medium text-primary underline-offset-2 hover:underline"
             >
               {isLogin ? "Sign Up" : "Sign In"}
             </button>
