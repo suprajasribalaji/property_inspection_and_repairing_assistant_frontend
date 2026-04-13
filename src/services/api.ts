@@ -22,9 +22,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-      window.location.href = "/";
+      const token = localStorage.getItem("access_token");
+      // Only redirect if user was previously authenticated
+      // If no token exists, they're on the login page — just let the error propagate
+      if (token) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+        window.location.href = "/";
+      }
     }
     return Promise.reject(error);
   }

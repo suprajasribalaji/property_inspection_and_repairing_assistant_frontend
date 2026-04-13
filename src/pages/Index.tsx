@@ -58,7 +58,8 @@ const Index = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [signupError, setSignupError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailStatus, setEmailStatus] = useState<FieldStatus>("idle");
@@ -104,7 +105,8 @@ const Index = () => {
   // ── Toggle form ───────────────────────────────────────
   const handleToggle = () => {
     setIsLogin((v) => !v);
-    setError("");
+    setLoginError("");      
+    setSignupError("");
     setEmailStatus("idle");
     setUsernameStatus("idle");
     setEmail("");
@@ -117,14 +119,15 @@ const Index = () => {
   // ── Submit ────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setLoginError("");
+    setSignupError("");
 
     if (!isLogin) {
-      if (!isValidEmailFormat(email)) { setError("Please enter a valid email address."); return; }
-      if (emailStatus === "taken")    { setError("This email is already registered."); return; }
-      if (usernameStatus === "taken") { setError("This username is already taken."); return; }
-      if (username.length < 3)        { setError("Username must be at least 3 characters."); return; }
-      if (passwordStrength === "weak"){ setError("Please choose a stronger password."); return; }
+      if (!isValidEmailFormat(email))  { setSignupError("Please enter a valid email address."); return; }
+      if (emailStatus === "taken")     { setSignupError("This email is already registered."); return; }
+      if (usernameStatus === "taken")  { setSignupError("This username is already taken."); return; }
+      if (username.length < 3)         { setSignupError("Username must be at least 3 characters."); return; }
+      if (passwordStrength === "weak") { setSignupError("Please choose a stronger password."); return; }
     }
 
     setLoading(true);
@@ -137,7 +140,12 @@ const Index = () => {
       navigate("/home");
     } catch (err) {
       const detail = err.response?.data?.detail;
-      setError(Array.isArray(detail) ? detail[0]?.msg : detail || "Something went wrong. Please try again.");
+      const message = Array.isArray(detail) ? detail[0]?.msg : detail || "Something went wrong. Please try again.";
+      if (isLogin) {
+        setLoginError(message);
+      } else {
+        setSignupError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -198,9 +206,9 @@ const Index = () => {
           </p>
 
           {/* Error banner */}
-          {error && (
+          {(isLogin ? loginError : signupError) && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
+              {isLogin ? loginError : signupError}
             </div>
           )}
 
