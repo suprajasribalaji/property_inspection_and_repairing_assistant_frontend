@@ -30,9 +30,9 @@ const ChatPage = () => {
   const [isRestoringLatestResults, setIsRestoringLatestResults] = useState(true);
 
   // Panel constraints
-  const LEFT_PANEL_MIN = 30; // 30% minimum
+  const LEFT_PANEL_MIN = 10; // 30% minimum
   const LEFT_PANEL_MAX = 50; // 90% maximum (allows chat to shrink to 10%)
-  const RIGHT_PANEL_MIN = 30; // 10% minimum
+  const RIGHT_PANEL_MIN = 10; // 10% minimum
   const RIGHT_PANEL_MAX = 50; // 70% maximum (when left panel is at 30%)
 
   // Fetch latest session with results from DB and restore context from it

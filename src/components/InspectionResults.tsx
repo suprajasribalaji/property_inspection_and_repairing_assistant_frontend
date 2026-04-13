@@ -64,15 +64,15 @@ const InspectionResults = () => {
             <motion.div
               key={i}
               layout
-              className="rounded-xl border border-border bg-card shadow-card overflow-hidden"
+              className="rounded-xl border border-border bg-card shadow-card"
             >
-              <button
+              <div
                 onClick={() => toggle(i)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-secondary/50 transition"
+                className="flex w-full items-start gap-3 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-secondary/50 transition min-h-0 cursor-pointer"
               >
-                {isOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-primary" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-                <span className="flex-1">{item.question}</span>
-              </button>
+                {isOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-primary mt-0.5" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />}
+                <div className="flex-1 text-left break-words whitespace-normal overflow-wrap-anywhere" title={item.question}>{item.question}</div>
+              </div>
               <AnimatePresence>
                 {isOpen && (
                   <motion.div

@@ -118,6 +118,11 @@ export interface BackendResponse {
   storage: InspectionStorageInfo | null;
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export interface ChatResponse {
   answer: string;
 }
@@ -211,8 +216,19 @@ export const inspectImage = async (
     session_id: response.data.session_id,
   };
 };
-export const sendChatMessage = async (question: string): Promise<ChatResponse> => {
-  const response = await api.post<ChatResponse>("/chat", { question });
+export const sendChatMessage = async (
+  question: string,
+  history: ChatMessage[] = []
+): Promise<ChatResponse> => {
+  // Send last 20 messages as context so the LLM sees prior turns (no DB round-trip needed)
+  const conversationHistory = history.slice(-20).map((m) => ({
+    role: m.role,
+    message: m.content,
+  }));
+  const response = await api.post<ChatResponse>("/chat", {
+    question,
+    conversation_history: conversationHistory,
+  });
   return response.data;
 };
 
