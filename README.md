@@ -1,73 +1,48 @@
-# Welcome to your Lovable project
+# Property Inspection Assistant - Frontend
 
-## Project info
+The modern React frontend for the Property Inspection and Repairing Assistant, featuring a premium Lavender-themed design and a seamless AI interaction experience.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## ✨ Features
+- **Modern UI**: Clean, responsive design with glassmorphism and smooth micro-animations.
+- **Image Analysis Dashboard**: Visual gallery of inspection findings with detailed defect highlights.
+- **AI Chat Hub**: Interactive chat interface for consulting with a team of specialized AI agents.
+- **Persistent Sessions**: View historical inspections and conversations at any time.
+- **Secure Handling**: JWT-based session management and protected routing.
 
-## How can I edit this code?
+## 🛠 Tech Stack
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Vanilla CSS (Custom Design System)
+- **Icons**: Lucide React
+- **Networking**: Axios
 
-There are several ways of editing your application.
+## 🚦 Getting Started
 
-**Use Lovable**
+### 1. Prerequisites
+- Node.js (v18+)
+- npm or yarn
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 2. Installation
+```bash
+# Navigate to frontend directory
+cd property_inspection_and_repairing_assistant_frontend
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Install dependencies
+npm install
 ```
 
-**Edit a file directly in GitHub**
+### 3. Run the Development Server
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🏗 Project Structure
+- `/src/pages`: Main application views (Dashboard, Analysis, Auth).
+- `/src/components`: UI components (Navbar, ChatBox, ImageGallery).
+- `/src/services`: API client and endpoint handlers.
+- `/src/context`: React Context for global state (Auth, Sessions).
+- `/src/index.css`: Main design system and Lavender theme variables.
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*Created for the Property Inspection and Repairing Assistant Project.*
