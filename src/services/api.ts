@@ -23,9 +23,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-      window.location.href = "/";
+      const token = localStorage.getItem("access_token");
+      // Only redirect if user was previously authenticated
+      // If no token exists, they're on the login page — just let the error propagate
+      if (token) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+        window.location.href = "/";
+      }
     }
     return Promise.reject(error);
   }
@@ -112,6 +117,11 @@ export interface BackendResponse {
   session_id: string;
   question_answers: Array<{ question: string; answer: string }>;
   storage: InspectionStorageInfo | null;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 export interface ChatResponse {
@@ -207,8 +217,19 @@ export const inspectImage = async (
     session_id: response.data.session_id,
   };
 };
-export const sendChatMessage = async (question: string): Promise<ChatResponse> => {
-  const response = await api.post<ChatResponse>("/chat", { question });
+export const sendChatMessage = async (
+  question: string,
+  history: ChatMessage[] = []
+): Promise<ChatResponse> => {
+  // Send last 20 messages as context so the LLM sees prior turns (no DB round-trip needed)
+  const conversationHistory = history.slice(-20).map((m) => ({
+    role: m.role,
+    message: m.content,
+  }));
+  const response = await api.post<ChatResponse>("/chat", {
+    question,
+    conversation_history: conversationHistory,
+  });
   return response.data;
 };
 

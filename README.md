@@ -1,73 +1,141 @@
-# Welcome to your Lovable project
+# 🏠 House Inspection AI Assistant — Frontend
 
-## Project info
+A production-grade React application that enables users to upload property images and receive AI-powered defect analysis reports through a conversational interface. Built with a focus on premium aesthetics, smooth interactions, and real-time validation.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+🔗 **Live Demo**: [property-inspection-and-repairing-a.vercel.app](https://property-inspection-and-repairing-a.vercel.app)  
+🔗 **Backend Repo**: [property_inspection_and_repairing_assistant_backend](https://github.com/suprajasribalaji/property_inspection_and_repairing_assistant_backend)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## ✨ Features
 
-**Use Lovable**
+- 📸 **Multi-Image Upload**: Seamlessly upload multiple property images for a comprehensive inspection.
+- 🤖 **AI-Driven Analysis**: Integration with Groq's Llama 4 Scout vision model for automated defect detection.
+- 💬 **Interactive Chat Hub**: Consult with a specialized AI agent about inspection findings and repair advice.
+- 🔐 **Advanced Authentication**: JWT-based security with real-time uniqueness validation and password strength indicators.
+- ⏳ **Dynamic Progress**: Interactive loading overlays that keep the user informed during complex AI processing.
+- 📱 **Responsive & Modern UI**: A premium design system featuring glassmorphism, micro-animations, and a responsive layout.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+| Layer | Technology |
+|---|---|
+| Framework | React 18 + Vite |
+| Language | TypeScript |
+| UI Components | shadcn/ui + Lucide Icons |
+| State Management | React Context API + TanStack Query |
+| Auth | JWT (Stored in LocalStorage) |
+| HTTP Client | Axios |
+| Routing | React Router v6 |
+| Styling | Tailwind CSS |
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🏗️ Architecture
 
-Follow these steps:
+```mermaid
+graph TD
+    User[User] --> Landing[Auth Page / Landing]
+    Landing --> Dashboard[Inspection Dashboard]
+    Dashboard --> Uploader[Image Uploader]
+    Uploader --> AI[AI Processing Overlay]
+    AI --> Results[Inspection Results]
+    Results --> Chat[Interactive Chat Hub]
+    Chat --> History[Session History]
+    
+    subgraph "Global State"
+        Context[InspectionContext]
+        Auth[Auth State]
+    end
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🔄 Application Flow
 
-# Step 3: Install the necessary dependencies.
-npm i
+1.  **Onboarding**: Users arrive at a premium landing page. The **Sign-Up** process includes real-time checks for username/email availability and password strength rules to ensure account security.
+2.  **Property Inspection**:
+    *   The user navigates to the **Inspection Dashboard**.
+    *   They can upload multiple images (e.g., floor, walls, ceiling).
+    *   A **Loading Overlay** provides visual feedback while the backend's LangGraph pipeline analyzes the images.
+3.  **Reviewing Results**:
+    *   The findings are displayed in a structured format, highlighting detected defects.
+    *   Users can view a generated report or proceed to the chat for more details.
+4.  **AI Consultation**:
+    *   In the **Chat Hub**, users can ask follow-up questions.
+    *   The AI uses the specific findings from the inspection to provide tailored repair suggestions.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js v18+
+- npm, yarn, or pnpm
+- Backend server running (see [Backend Repo](https://github.com/suprajasribalaji/property_inspection_and_repairing_assistant_backend))
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/suprajasribalaji/property_inspection_and_repairing_assistant_frontend.git
+
+# Navigate to project directory
+cd property_inspection_and_repairing_assistant_frontend
+
+# Install dependencies
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+### Run Locally
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+App runs at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 📁 Project Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+├── components/
+│   ├── ui/             # shadcn/ui reusable components
+│   ├── Chat/           # Chat interface & panel
+│   ├── ImageUpload/    # Multi-image upload logic
+│   └── Results/        # Inspection findings visualization
+├── pages/
+│   ├── Index.tsx       # Landing, Login & Signup
+│   ├── ImageAnalysis.tsx # Main dashboard
+│   └── ChatPage.tsx    # Q&A interface
+├── context/
+│   └── InspectionContext.tsx # Global state management
+├── services/
+│   └── api.ts          # Axios configuration & API calls
+└── App.tsx             # Routing & App entry point
+```
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## 🔗 Related
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [Backend Repository](https://github.com/suprajasribalaji/property_inspection_and_repairing_assistant_backend)
+- Built with [React](https://reactjs.org) · [Vite](https://vitejs.dev) · [Tailwind CSS](https://tailwindcss.com)
